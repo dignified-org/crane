@@ -1,0 +1,26 @@
+{
+  "scripts": {
+    "start": "next dev"
+  },
+  "dependencies": {
+    "@sentry/browser": "^5.15.5",
+    "@sentry/integrations": "^5.15.5",
+    "@sentry/node": "^5.15.5",
+    "@sentry/types": "^5.15.5",
+    "@types/safe-compare": "^1.1.0",
+    "@types/yup": "^0.28.0",
+    "@zeit/next-source-maps": "^0.0.3",
+    "dotenv": "^8.2.0",
+    "js-cookie": "^2.2.1",
+    "next": "9.3.5",
+    "react": "16.13.1",
+    "react-dom": "16.13.1",
+    "safe-compare": "^1.1.4",
+    "yup": "^0.28.4"
+  },
+  "devDependencies": {
+    "@types/node": "13.13.4",
+    "@types/react": "16.9.34",
+    "typescript": "3.8.3"
+  }
+}
