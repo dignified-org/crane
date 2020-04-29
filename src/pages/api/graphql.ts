@@ -1,9 +1,13 @@
 import { URLSearchParams } from 'url';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { ApolloServer } from 'apollo-server-micro';
+import jwt from 'jsonwebtoken';
 
+import shortid from 'shortid';
 import typeDefs from '../../../schema/root.graphql';
 import { sharedConfig } from '../../config';
+import { connect, findStoreByDomain, Store } from '../../mongo';
+import { serverConfig } from '../../config/server';
 
 interface Props {
   shop: string;
@@ -39,8 +43,9 @@ const generateRedirect = ({
 
 export interface Context {
   host: string;
-  shop: string;
+  shop?: string;
   token?: string;
+  store?: Store;
 }
 
 interface CreateContextProps {
@@ -51,41 +56,68 @@ interface CreateContextProps {
 async function createContext(props: CreateContextProps) {
   const { req } = props;
 
+  const { host } = req.headers;
+
   const shop = req.headers['shopify-domain'];
   const token = req.headers['authentication-token'];
 
-  if (!shop || Array.isArray(shop)) {
-    throw new Error('Invalid shop');
+  let store;
+  if (shop) {
+    store = await findStoreByDomain(shop as string);
   }
-
-  const { host } = req.headers;
 
   return {
     host,
     shop,
     token,
+    store,
   };
 }
 
 const resolvers = {
   Query: {
-    me: (_parent, _args, context: Context) => {
-      const { host, shop } = context;
+    me: async (_parent, args, context: Context) => {
+      const { pathname = '/' } = args;
+      const { host, shop, store } = context;
+
+      if (!shop) {
+        throw new Error('Invalid shop provided');
+      }
+
+      if (!store) {
+        const nonce = await jwt.sign(
+          {
+            shop,
+            pathname,
+            state: shortid.generate(),
+          },
+          serverConfig.SHOPIFY_SHARED_SECRET,
+          {
+            algorithm: 'HS256',
+          },
+        );
+
+        return {
+          __typename: 'Forbidden',
+          redirect: generateRedirect({
+            apiKey: sharedConfig.SHOPIFY_API_KEY,
+            redirect: `https://${host}/api/shopify/callback`,
+            shop,
+            scopes: ['write_products'],
+            nonce,
+          }),
+        };
+      }
 
       return {
-        redirect: generateRedirect({
-          apiKey: sharedConfig.SHOPIFY_API_KEY,
-          redirect: `https://${host}/api/shopify/callback`,
-          online: true,
-          shop,
-          scopes: ['write_products'],
-          nonce: 'fake',
-        }),
+        __typename: 'User',
+        email: 'me@fake.com',
       };
     },
   },
   Me: {
-    __resolveType: () => 'Forbidden',
+    // eslint-disable-next-line no-underscore-dangle
+    __resolveType: me => me.__typename,
   },
 };
 
@@ -105,4 +137,7 @@ export const config = {
   },
 };
 
-export default server.createHandler({ path: '/api/graphql' });
+export default async (req: NextApiRequest, res: NextApiResponse) => {
+  await connect();
+  return await server.createHandler({ path: '/api/graphql' })(req, res);
+};

@@ -9,6 +9,7 @@ if (process.env.NODE_ENV === 'development') {
 module.exports = nextSourceMaps({
   env: {
     SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
+    SHOPIFY_APP_HANDLE: process.env.SHOPIFY_APP_HANDLE,
     SENTRY_DSN: process.env.SENTRY_DSN,
   },
   webpack: (config, { isServer, buildId }) => {

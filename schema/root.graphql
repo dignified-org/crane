@@ -9,7 +9,7 @@ type Forbidden {
 union Me = User | Forbidden
 
 type Query {
-  me: Me!
+  me(pathname: String): Me!
 }
 
 # type Mutation {
