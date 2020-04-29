@@ -10,6 +10,8 @@ module.exports = nextSourceMaps({
   env: {
     SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
     SHOPIFY_APP_HANDLE: process.env.SHOPIFY_APP_HANDLE,
+    PUSHER_API_KEY: process.env.PUSHER_API_KEY,
+    PUSHER_CLUSTER: process.env.PUSHER_CLUSTER,
     SENTRY_DSN: process.env.SENTRY_DSN,
   },
   webpack: (config, { isServer, buildId }) => {
