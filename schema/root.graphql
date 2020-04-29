@@ -1,0 +1,17 @@
+type User {
+  email: String!
+}
+
+type Forbidden {
+  redirect: String!
+}
+
+union Me = User | Forbidden
+
+type Query {
+  me: Me!
+}
+
+# type Mutation {
+  
+# }

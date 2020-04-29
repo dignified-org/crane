@@ -1,54 +1,7 @@
-import { NextApiRequest, NextApiResponse } from 'next'
+import { NextApiRequest, NextApiResponse } from 'next';
 import safeCompare from 'safe-compare';
 import { createHmac } from 'crypto';
-import { serverConfig } from '../../../config';
-
-// Disable default body parsing
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-}
-
-function goAwayArray(header?: string | string[]) {
-  if (Array.isArray(header)) {
-    return undefined;
-  }
-  return header;
-}
-
-function validHeader(header?: string | string[]) {
-  return header && !Array.isArray(header);
-}
-
-export default (req: NextApiRequest, res: NextApiResponse) => {
-  // Validate webhook
-  // https://github.com/Shopify/quilt/blob/master/packages/koa-shopify-webhooks/src/receive.ts
-  const hmac = goAwayArray(req?.headers[WebhookHeader.Hmac]);
-  const topic = goAwayArray(req?.headers[WebhookHeader.Topic]);
-  const domain = goAwayArray(req?.headers[WebhookHeader.Domain]);
-
-  if (!validHeader(hmac) || !validHeader(topic) || !validHeader(domain)) {
-    return res.status(403).send('Forbidden');
-  }
-
-  const rawBody = req.body;
-
-  const generatedHash = createHmac('sha256', serverConfig.SHOPIFY_SHARED_SECRET)
-      .update(rawBody, 'utf8')
-      .digest('base64');
-
-  if (!safeCompare(generatedHash, hmac)) {
-    return res.status(403).send('Forbidden');
-  }
-
-  // JSON parse is safe, since HMAC is valid
-  const body = JSON.parse(rawBody);
-
-  console.log(body);
-
-  res.status(200).send('ok');
-}
+import { serverConfig } from '../../../config/server';
 
 export enum WebhookHeader {
   AccessToken = 'X-Shopify-Access-Token',
@@ -116,3 +69,50 @@ export type Topic =
   | 'LOCATIONS_CREATE'
   | 'LOCATIONS_UPDATE'
   | 'LOCATIONS_DELETE';
+
+// Disable default body parsing
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function goAwayArray(header?: string | string[]) {
+  if (Array.isArray(header)) {
+    return undefined;
+  }
+  return header;
+}
+
+function validHeader(header?: string | string[]) {
+  return header && !Array.isArray(header);
+}
+
+export default (req: NextApiRequest, res: NextApiResponse) => {
+  // Validate webhook
+  // https://github.com/Shopify/quilt/blob/master/packages/koa-shopify-webhooks/src/receive.ts
+  const hmac = goAwayArray(req?.headers[WebhookHeader.Hmac]);
+  const topic = goAwayArray(req?.headers[WebhookHeader.Topic]);
+  const domain = goAwayArray(req?.headers[WebhookHeader.Domain]);
+
+  if (!validHeader(hmac) || !validHeader(topic) || !validHeader(domain)) {
+    return res.status(403).send('Forbidden');
+  }
+
+  const rawBody = req.body;
+
+  const generatedHash = createHmac('sha256', serverConfig.SHOPIFY_SHARED_SECRET)
+    .update(rawBody, 'utf8')
+    .digest('base64');
+
+  if (!safeCompare(generatedHash, hmac)) {
+    return res.status(403).send('Forbidden');
+  }
+
+  // JSON parse is safe, since HMAC is valid
+  const body = JSON.parse(rawBody);
+
+  console.log(body);
+
+  res.status(200).send('ok');
+};

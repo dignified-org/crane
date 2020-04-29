@@ -1,5 +1,6 @@
-const webpack = require('webpack')
-const nextSourceMaps = require('@zeit/next-source-maps')()
+/* eslint-disable */
+const webpack = require('webpack');
+const nextSourceMaps = require('@zeit/next-source-maps');
 
 if (process.env.NODE_ENV === 'development') {
   require('dotenv').config();
@@ -7,19 +8,28 @@ if (process.env.NODE_ENV === 'development') {
 
 module.exports = nextSourceMaps({
   env: {
+    SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
     SENTRY_DSN: process.env.SENTRY_DSN,
   },
   webpack: (config, { isServer, buildId }) => {
+    // Sentry
     config.plugins.push(
       new webpack.DefinePlugin({
         'process.env.SENTRY_RELEASE': JSON.stringify(buildId),
-      })
-    )
+      }),
+    );
 
     if (!isServer) {
-      config.resolve.alias['@sentry/node'] = '@sentry/browser'
+      config.resolve.alias['@sentry/node'] = '@sentry/browser';
     }
 
-    return config
+    // *.graphql loader
+    config.module.rules.push({
+      test: /\.(graphql|gql)$/,
+      exclude: /node_modules/,
+      loader: 'graphql-tag/loader',
+    });
+
+    return config;
   },
-})
+});

@@ -3,24 +3,35 @@
     "start": "next dev"
   },
   "dependencies": {
-    "@sentry/browser": "^5.15.5",
-    "@sentry/integrations": "^5.15.5",
-    "@sentry/node": "^5.15.5",
-    "@sentry/types": "^5.15.5",
-    "@types/safe-compare": "^1.1.0",
-    "@types/yup": "^0.28.0",
-    "@zeit/next-source-maps": "^0.0.3",
-    "dotenv": "^8.2.0",
-    "js-cookie": "^2.2.1",
+    "@apollo/client": "3.0.0-beta.44",
+    "@sentry/browser": "5.15.5",
+    "@sentry/integrations": "5.15.5",
+    "@sentry/node": "5.15.5",
+    "@sentry/types": "5.15.5",
+    "@shopify/app-bridge": "1.21.2",
+    "@shopify/app-bridge-react": "1.21.2",
+    "@shopify/polaris": "4.21.0",
+    "@shopify/polaris-icons": "3.10.0",
+    "@types/safe-compare": "1.1.0",
+    "@types/yup": "0.28.0",
+    "@zeit/next-source-maps": "0.0.3",
+    "apollo-server-micro": "2.12.0",
+    "dotenv": "8.2.0",
+    "graphql": "14.6.0",
+    "graphql-tag": "2.10.3",
+    "isomorphic-unfetch": "3.0.0",
+    "js-cookie": "2.2.1",
     "next": "9.3.5",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "safe-compare": "^1.1.4",
-    "yup": "^0.28.4"
+    "safe-compare": "1.1.4",
+    "yup": "0.28.4"
   },
   "devDependencies": {
+    "@satel/eslint-config-ts-react": "3.3.1",
     "@types/node": "13.13.4",
     "@types/react": "16.9.34",
+    "eslint": "6.8.0",
     "typescript": "3.8.3"
   }
 }
