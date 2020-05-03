@@ -39,3 +39,18 @@ export async function insertLogin(input: InsertLogin): Promise<Login> {
 
   return await logins.create(input);
 }
+
+export async function findValidLogin(
+  userId: string,
+  shop: string,
+): Promise<Login | undefined> {
+  await connect();
+
+  const login = await logins.findOne(
+    { userId, shop, expiresAt: { $gt: Date.now() / 1000 } },
+    {},
+    { sort: { createdAt: -1 } },
+  );
+
+  return login;
+}

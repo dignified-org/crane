@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { Store, findStoreByDomain } from '../mongo';
+import { Store, findStoreByDomain, Login } from '../mongo';
 
 /**
  * Context passed to resolvers
@@ -8,9 +8,10 @@ import { Store, findStoreByDomain } from '../mongo';
  */
 export interface Context {
   host: string;
-  shop?: string;
-  token?: string;
-  store?: Store;
+  shop: string;
+  token: string;
+  login: Login;
+  store: Store;
 }
 
 interface CreateContextProps {
@@ -29,18 +30,14 @@ export async function createContext(props: CreateContextProps) {
 
   const { host } = req.headers;
 
-  const shop = req.headers['shopify-domain'];
-  const token = req.headers['authentication-token'];
-
-  let store;
-  if (shop) {
-    store = await findStoreByDomain(shop as string);
-  }
+  const login = (req as any).session as Login;
+  const store = await findStoreByDomain(login.shop);
 
   return {
     host,
-    shop,
-    token,
+    shop: login.shop,
+    token: login.token,
+    login,
     store,
   };
 }

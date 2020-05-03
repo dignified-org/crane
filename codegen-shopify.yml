@@ -14,3 +14,7 @@ generates:
       - typescript
       - typescript-operations
       - fragment-matcher
+
+  ./src/schema/shopify.graphql:
+    plugins:
+      - schema-ast
