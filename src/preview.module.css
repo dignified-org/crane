@@ -3,10 +3,6 @@
   overflow-y: hidden;
 }
 
-/* .override :global(.Polaris-Frame__Main) {
-  padding-top: 0;
-} */
-
 .wrapper {
   display: grid;
   grid-template-columns: 380px 1fr;

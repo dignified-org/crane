@@ -18,16 +18,29 @@ import { useFormik, Form, FormikProvider } from 'formik';
 import { TextField, Checkbox } from '@satel/formik-polaris';
 import { useDebounce } from 'use-debounce';
 
+import gql from 'graphql-tag';
+import { useQuery } from '@apollo/client';
+import { useRouter } from 'next/dist/client/router';
 import s from './preview.module.css';
 import { usePusherChannel } from './Pusher';
 
-function Preview() {
+interface PreviewInternalProps {
+  initialProduct: any;
+}
+
+function PreviewInternal(props: PreviewInternalProps) {
+  const { initialProduct } = props;
+
   const topBarMarkup = useMemo(() => {
     return <TopBar />;
   }, []);
 
   const formik = useFormik({
-    initialValues: {},
+    initialValues: {
+      id: initialProduct.id,
+      title: initialProduct.title,
+      handle: initialProduct.handle,
+    },
     onSubmit: console.log,
   });
 
@@ -37,12 +50,11 @@ function Preview() {
   useEffect(() => {
     if (debouncedTitle) {
       channel.trigger('client-product-update', {
-        id:
-          'Shopify__Product__Z2lkOi8vc2hvcGlmeS9Qcm9kdWN0LzQ1OTk0NjU5Njc3MjU=',
+        id: `Shopify__Product__${initialProduct.storefrontId}`,
         title: debouncedTitle,
       });
     }
-  }, [channel, debouncedTitle]);
+  }, [channel, debouncedTitle, initialProduct.storefrontId]);
 
   // const [debouncedValues] = useDebounce(formik.values, 500);
 
@@ -173,6 +185,38 @@ function Preview() {
       </div>
     </FormikProvider>
   );
+}
+
+const PREVIEW_QUERY = gql`
+  query PreviewProduct($id: ID!) {
+    product(id: $id) {
+      id
+      legacyResourceId
+      storefrontId
+      handle
+      title
+    }
+  }
+`;
+
+function Preview() {
+  const router = useRouter();
+
+  const { id } = router.query;
+
+  const { data } = useQuery(PREVIEW_QUERY, {
+    variables: {
+      id: `gid://shopify/Product/${id}`,
+    },
+  });
+
+  const product = data?.product;
+
+  if (!product) {
+    return <p>loading</p>;
+  }
+
+  return <PreviewInternal initialProduct={product} />;
 }
 
 export default Preview;

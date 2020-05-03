@@ -1,6 +1,4 @@
-import jwt from 'jsonwebtoken';
 import { AccessMode } from './auth';
-import { serverConfig } from '../config/server';
 
 /**
  * Where the user is in the app
@@ -32,6 +30,11 @@ export interface Nonce {
   pathname: string;
 
   /**
+   * Search parameters to persist
+   */
+  search: string;
+
+  /**
    * Location to redirect user back to on success
    */
   location: Location;
@@ -42,40 +45,71 @@ export interface Nonce {
   mode: AccessMode;
 }
 
-const ALGORITHM = 'HS256';
-
 /**
- * Issue a signed nonce that can be verified
+ * Issue a nonce that can be verified
  * @export
  * @param {Nonce} nonce
- * @param {string} [secret=serverConfig.SHOPIFY_SHARED_SECRET]
+ * @param {string} apiKey
  * @returns
  */
-export async function issueNonce(
-  nonce: Nonce,
-  secret: string = serverConfig.SHOPIFY_SHARED_SECRET,
-) {
-  return await jwt.sign(nonce, secret, {
-    algorithm: ALGORITHM,
-    expiresIn: 60 * 10, // 10m
+export function issueNonce(nonce: Nonce, apiKey: string) {
+  const sp = new URLSearchParams(nonce.search);
+
+  sp.delete('hmac');
+  sp.delete('shop');
+  sp.delete('locale');
+  sp.delete('session');
+  sp.delete('timestamp');
+  sp.delete('token');
+
+  console.log(sp.toString());
+
+  const body = JSON.stringify({
+    ...nonce,
+    search: sp.toString(),
+    apiKey,
+    timestamp: Date.now(),
   });
+
+  if (typeof window === 'undefined') {
+    return Buffer.from(body)
+      .toString('base64')
+      .replace(/=*/g, '');
+  }
+
+  return window.btoa(body).replace(/=*/g, '');
 }
 
 /**
  * Validate that state matches signature of nonce
  * @export
  * @param {string} state
- * @param {string} [secret=serverConfig.SHOPIFY_SHARED_SECRET]
+ * @param {string} apiKey
  * @returns
  */
-export async function validateNonce(
-  state: string,
-  secret: string = serverConfig.SHOPIFY_SHARED_SECRET,
-) {
+export function validateNonce(state: string, apiKey: string) {
   try {
-    const nonce = await jwt.verify(state, secret, {
-      algorithms: [ALGORITHM],
-    });
+    let json;
+
+    if (typeof window === 'undefined') {
+      json = Buffer.from(state, 'base64').toString();
+    } else {
+      json = window.atob(state);
+    }
+    const nonce = JSON.parse(json);
+
+    if (nonce?.apiKey !== apiKey) {
+      return null;
+    }
+
+    if (
+      !nonce?.timestamp ||
+      Number.isNaN(nonce?.timestamp) ||
+      Date.now() < nonce.timestamp ||
+      Math.abs(Date.now() - nonce?.timestamp) > 1000 * 60 * 10 // Within 10 minutes
+    ) {
+      return null;
+    }
 
     return nonce as Nonce;
   } catch (e) {

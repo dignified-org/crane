@@ -15,20 +15,28 @@ import { upsertUserByShopifyId } from '../../../mongo/user';
 import { insertLogin } from '../../../mongo/login';
 import { findStoreByDomain } from '../../../mongo';
 import { generateAuthRedirect, AccessMode } from '../../../shopify/auth';
+import { validateNonce, Location } from '../../../shopify/nonce';
 
 export async function authorizeShopifyCallback(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
-  const { code, hmac, shop, state: nonce } = req.query;
+  const { code, hmac, shop, state } = req.query;
 
-  if (!nonce || !validateShop(shop)) {
-    res.status(400).send('Bad Request');
+  if (!state || !validateShop(shop)) {
+    res.status(400).send('Invalid shop');
     return;
   }
 
   if (!validateHmac(hmac, serverConfig.SHOPIFY_SHARED_SECRET, req.query)) {
-    res.status(400).send('Bad Request');
+    res.status(400).send('Invalid hmac');
+    return;
+  }
+
+  const nonce = validateNonce(state as string, sharedConfig.SHOPIFY_API_KEY);
+
+  if (!nonce) {
+    res.status(403).send('Invalid nonce');
     return;
   }
 
@@ -57,17 +65,25 @@ export async function authorizeShopifyCallback(
     return;
   }
 
-  return await accessTokenResponse.json();
+  const accessTokenData = await accessTokenResponse.json();
+
+  if (!accessTokenData) {
+    return null;
+  }
+
+  return { accessTokenData, nonce };
 }
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
-  const accessTokenData = await authorizeShopifyCallback(req, res);
+  const validationResponse = await authorizeShopifyCallback(req, res);
 
-  if (!accessTokenData) {
+  if (!validationResponse) {
     return;
   }
 
-  const { shop } = req.query;
+  const { accessTokenData, nonce } = validationResponse;
+
+  const { shop, state } = req.query;
 
   const {
     access_token: accessToken,
@@ -139,7 +155,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
   if (!store || !store.installed || !haveRequiredScopes(store.scopes)) {
     const redirect = generateAuthRedirect({
       mode: AccessMode.Offline,
-      nonce: 'todo',
+      nonce: state as string,
       scopes: REQUIRED_SCOPES,
       shop: shop as string,
       apiKey: sharedConfig.SHOPIFY_API_KEY,
@@ -152,9 +168,20 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  res.writeHead(302, {
-    Location: `https://${shop}/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
-      sharedConfig.SHOPIFY_API_KEY}${'/'}?token=${token}`,
-  });
+  const path = nonce.pathname.endsWith('/')
+    ? nonce.pathname.substring(0, nonce.pathname.length - 1)
+    : nonce.pathname;
+
+  if (nonce.location === Location.Admin || path === '') {
+    res.writeHead(302, {
+      Location: `https://${shop}/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
+        sharedConfig.SHOPIFY_API_KEY}${path}?token=${token}&${nonce.search}`,
+    });
+  } else {
+    res.writeHead(302, {
+      Location: `https://${req.headers.host}${path}?token=${token}&${nonce.search}`,
+    });
+  }
+
   res.end();
 };

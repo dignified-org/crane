@@ -3,7 +3,6 @@
 import { GraphQLResolveInfo } from 'graphql';
 import { Context } from './context';
 export type Maybe<T> = T | null;
-export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 
 
 /** All built-in and custom scalars, mapped to their actual values */
@@ -15,31 +14,15 @@ export type Scalars = {
   Float: number;
 };
 
-export type Forbidden = {
-   __typename?: 'Forbidden';
-  redirect: Scalars['String'];
-};
-
-export enum Location {
-  Top = 'TOP',
-  Admin = 'ADMIN'
-}
-
-export type Me = User | Forbidden;
-
 export type Query = {
    __typename?: 'Query';
-  me: Me;
-};
-
-
-export type QueryMeArgs = {
-  pathname?: Maybe<Scalars['String']>;
-  location?: Maybe<Location>;
+  me: User;
 };
 
 export type User = {
    __typename?: 'User';
+  firstName: Scalars['String'];
+  lastName: Scalars['String'];
   email: Scalars['String'];
 };
 
@@ -117,46 +100,31 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 /** Mapping between all available schema types and the resolvers types */
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>,
-  String: ResolverTypeWrapper<Scalars['String']>,
-  Location: Location,
-  Me: ResolversTypes['User'] | ResolversTypes['Forbidden'],
   User: ResolverTypeWrapper<User>,
-  Forbidden: ResolverTypeWrapper<Forbidden>,
+  String: ResolverTypeWrapper<Scalars['String']>,
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>,
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Query: {},
-  String: Scalars['String'],
-  Location: Location,
-  Me: ResolversParentTypes['User'] | ResolversParentTypes['Forbidden'],
   User: User,
-  Forbidden: Forbidden,
+  String: Scalars['String'],
   Boolean: Scalars['Boolean'],
 };
 
-export type ForbiddenResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Forbidden'] = ResolversParentTypes['Forbidden']> = {
-  redirect?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
-  __isTypeOf?: isTypeOfResolverFn<ParentType>,
-};
-
-export type MeResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Me'] = ResolversParentTypes['Me']> = {
-  __resolveType: TypeResolveFn<'User' | 'Forbidden', ParentType, ContextType>
-};
-
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
-  me?: Resolver<ResolversTypes['Me'], ParentType, ContextType, RequireFields<QueryMeArgs, never>>,
+  me?: Resolver<ResolversTypes['User'], ParentType, ContextType>,
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
 export type Resolvers<ContextType = Context> = {
-  Forbidden?: ForbiddenResolvers<ContextType>,
-  Me?: MeResolvers,
   Query?: QueryResolvers<ContextType>,
   User?: UserResolvers<ContextType>,
 };

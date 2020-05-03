@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
+import { connect } from '.';
 
 export interface Store extends Document {
   domain: string;
@@ -24,6 +25,7 @@ const stores =
 export async function findStoreByDomain(
   domain: Store['domain'],
 ): Promise<Store | undefined> {
+  await connect();
   return await stores.findOne({ domain });
 }
 
@@ -35,5 +37,6 @@ export interface UpsertStoreByDomainInput {
 
 export async function upsertStoreByDomain(input: UpsertStoreByDomainInput) {
   const { domain } = input;
+  await connect();
   return await stores.findOneAndUpdate({ domain }, input, { upsert: true });
 }

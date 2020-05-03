@@ -15,7 +15,7 @@ export interface User extends Document {
 export const UserSchema = new Schema<User>(
   {
     id: { type: String, required: true, unique: true },
-    email: { type: String, required: true, unique: true },
+    email: { type: String, required: true }, // @todo maybe merge on email one day?
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     emailVerified: { type: Boolean, required: true },
@@ -46,4 +46,9 @@ export async function upsertUserByShopifyId(
 
   const { id } = input;
   return await users.findOneAndUpdate({ id }, input, { upsert: true });
+}
+
+export async function findUserByShopifyId(id): Promise<User | undefined> {
+  await connect();
+  return await users.findOne({ id });
 }

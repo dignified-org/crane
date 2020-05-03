@@ -1,12 +1,27 @@
 import 'isomorphic-unfetch';
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+import {
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+  ApolloLink,
+} from '@apollo/client';
+import { ErrorLink, ErrorResponse } from '@apollo/link-error';
 
 import { shop, token } from '../config';
+import { redirectToLogin } from '../pages/_app';
 
-// eslint-disable-next-line import/prefer-default-export
-export const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link: new HttpLink({
+function errorHandler(response: ErrorResponse) {
+  const { networkError } = response;
+
+  if ((networkError as any)?.statusCode === 403) {
+    // @todo if not first load, show modal
+    redirectToLogin(shop());
+  }
+}
+
+const link = ApolloLink.concat(
+  new ErrorLink(errorHandler),
+  new HttpLink({
     uri: '/api/graphql',
     headers: {
       'Shopify-Domain': shop(),
@@ -14,4 +29,9 @@ export const client = new ApolloClient({
     },
     credentials: 'same-origin',
   }),
+);
+
+export const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link,
 });

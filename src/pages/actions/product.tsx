@@ -29,10 +29,22 @@ function ProductAction() {
         apiKey: sharedConfig.SHOPIFY_API_KEY,
         forceRedirect: false,
       });
-      Redirect.create(app).dispatch(
-        Redirect.Action.REMOTE,
-        redirect.toString(),
-      );
+      const r = Redirect.create(app);
+      r.dispatch(Redirect.Action.REMOTE, {
+        url: redirect.toString(),
+        // newContext: true,
+      });
+
+      // setTimeout(() => {
+      //   r.dispatch(Redirect.Action.ADMIN_SECTION, {
+      //     section: {
+      //       name: Redirect.ResourceType.Product,
+      //       resource: {
+      //         id: id as string,
+      //       },
+      //     },
+      //   });
+      // }, 200);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

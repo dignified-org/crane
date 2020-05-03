@@ -1,8 +1,11 @@
 import React from 'react';
 import { Page } from '@shopify/polaris';
+import { useMe } from '../graph/useUser';
 
 function IndexRoute() {
-  console.log('HERE I AM IN INDEX');
+  const me = useMe();
+
+  console.log(me);
 
   return <Page title="Crane">TODO</Page>;
 }

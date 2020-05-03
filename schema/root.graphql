@@ -1,15 +1,11 @@
 type User {
+  firstName: String!
+  lastName: String!
   email: String!
 }
 
-type Forbidden {
-  redirect: String!
-}
-
-union Me = User | Forbidden
-
 type Query {
-  me: Me!
+  me: User!
 }
 
 # type Mutation {
