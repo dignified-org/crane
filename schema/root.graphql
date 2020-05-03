@@ -8,8 +8,13 @@ type Forbidden {
 
 union Me = User | Forbidden
 
+enum Location {
+  TOP
+  ADMIN
+}
+
 type Query {
-  me(pathname: String): Me!
+  me(pathname: String, location: Location): Me!
 }
 
 # type Mutation {

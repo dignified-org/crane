@@ -21,5 +21,15 @@ const CONFIG_SCHEMA = object<ServerConfig>({
 }).noUnknown(false);
 
 export const serverConfig: ServerConfig = CONFIG_SCHEMA.validateSync(
-  process.env,
+  typeof window === 'undefined'
+    ? process.env
+    : {
+        SHOPIFY_SHARED_SECRET: '***',
+        MONGO_URI: '***',
+        MONGO_DATABASE: '***',
+        MONGO_USERNAME: '***',
+        MONGO_PASSWORD: '***',
+        PUSHER_APP_ID: '***',
+        PUSHER_SHARED_SECRET: '***',
+      },
 );

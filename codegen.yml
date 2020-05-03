@@ -1,0 +1,22 @@
+schema: "schema/root.graphql"
+
+documents:
+  - 'src/**/***.tsx'
+  - 'src/graph/***.ts'
+
+generates:
+  src/schema/generated.ts:
+    plugins:
+      - add: '/* AUTO GENERATED FILE. DO NOT MODIFY */'
+      - add: '/* eslint-disable */'
+      - "typescript"
+      - "typescript-resolvers":
+          contextType: ./context#Context
+
+  src/graph/generated.ts:
+    plugins:
+      - add: '/* AUTO GENERATED FILE. DO NOT MODIFY */'
+      - add: '/* eslint-disable */'
+      - "typescript"
+      - "typescript-operations"
+      - fragment-matcher

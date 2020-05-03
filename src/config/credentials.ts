@@ -19,8 +19,6 @@ export function shop() {
     window.localStorage.setItem('latest-shop', s);
   }
 
-  console.log(s);
-
   return s;
 }
 
@@ -41,9 +39,9 @@ export function token() {
     url.searchParams.get('token') ??
     window.localStorage.getItem(`${slug}__token`);
 
-  if (shop) {
+  if (t) {
     window.localStorage.setItem(`${slug}__token`, t);
   }
 
-  return s;
+  return t;
 }
