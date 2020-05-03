@@ -1,0 +1,38 @@
+.override {
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+/* .override :global(.Polaris-Frame__Main) {
+  padding-top: 0;
+} */
+
+.wrapper {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  width: 100vw;
+  height: calc(100vh - 56px);
+}
+
+.form {
+  display: grid;
+  grid-template-rows: 1fr 56px;
+  height: calc(100vh - 56px);
+  overflow: hidden;
+}
+
+.form:first-child {
+  padding: 10px;
+  overflow-y: scroll;
+}
+
+.preview {
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-left: 50px;
+  padding-right: 50px;
+}
+
+.preview iframe {
+  box-shadow: 0 0 3px rgba(0,0,0,0.1), 0 0 12px rgba(0,0,0,0.1);
+}

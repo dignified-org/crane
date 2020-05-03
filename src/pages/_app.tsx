@@ -23,8 +23,6 @@ function mountApp() {
   const shop = loadShop();
   const token = loadToken();
 
-  console.log(token, shop);
-
   const framed = window !== window.top;
 
   if (shop && !token) {

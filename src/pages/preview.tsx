@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic';
-import React, { useRef, useState } from 'react';
-import { Page, Frame } from '@shopify/polaris';
-import { sharedConfig } from '../config';
+import React from 'react';
+import Preview from '../Preview';
 
 const PusherProvider = dynamic(import('../Pusher'), {
   ssr: false,
@@ -10,9 +9,7 @@ const PusherProvider = dynamic(import('../Pusher'), {
 function PreviewRouter() {
   return (
     <PusherProvider>
-      <Frame>
-        <Page title="Crane preview">TODO</Page>
-      </Frame>
+      <Preview />
     </PusherProvider>
   );
 }

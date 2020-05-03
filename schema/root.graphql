@@ -18,5 +18,4 @@ type Query {
 }
 
 # type Mutation {
-  
 # }

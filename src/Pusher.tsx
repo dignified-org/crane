@@ -1,5 +1,12 @@
-import React, { useState, ReactNode, useEffect, useCallback } from 'react';
-import Pusher from 'pusher-js';
+import React, {
+  useState,
+  ReactNode,
+  useEffect,
+  useCallback,
+  createContext,
+  useContext,
+} from 'react';
+import Pusher, { Channel } from 'pusher-js';
 import { Button } from '@shopify/polaris';
 import { sharedConfig } from './config';
 
@@ -23,6 +30,18 @@ function initializePusher() {
 const initializeChannel = (pusher: Pusher) => () => {
   return pusher.subscribe('private-crane-demo');
 };
+
+export const PusherContext = createContext<Channel>(null);
+
+export function usePusherChannel() {
+  const c = useContext(PusherContext);
+
+  if (!c) {
+    throw new Error('todo');
+  }
+
+  return c;
+}
 
 export interface PusherProviderProps {
   children: ReactNode;
@@ -49,16 +68,7 @@ function PusherProvider(props: PusherProviderProps) {
   }, []);
 
   return (
-    <>
-      <Button
-        onClick={() => {
-          channel.trigger('client-hello', { world: '123' });
-        }}
-      >
-        Trigger
-      </Button>
-      {children}
-    </>
+    <PusherContext.Provider value={channel}>{children}</PusherContext.Provider>
   );
 }
 
