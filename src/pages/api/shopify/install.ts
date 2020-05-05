@@ -4,6 +4,10 @@ import { upsertStoreByDomain } from '../../../mongo';
 import { sharedConfig } from '../../../config';
 import { Location } from '../../../shopify/nonce';
 
+import { sentry } from '../../../sentry';
+
+sentry();
+
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const authResponse = await authorizeShopifyCallback(req, res);
 

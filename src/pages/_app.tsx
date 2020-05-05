@@ -18,6 +18,10 @@ import { generateAuthRedirect, AccessMode } from '../shopify/auth';
 import { client } from '../graph';
 import { issueNonce, Location } from '../shopify/nonce';
 
+import { sentry } from '../sentry';
+
+sentry();
+
 export function redirectToLogin(shop: string) {
   const framed = window !== window.top;
 

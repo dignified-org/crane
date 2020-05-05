@@ -6,6 +6,10 @@ import { server } from '../../schema';
 import { validateShop } from '../../shopify';
 import { serverConfig } from '../../config/server';
 
+import { sentry } from '../../sentry';
+
+sentry();
+
 export const config = {
   api: {
     bodyParser: false,

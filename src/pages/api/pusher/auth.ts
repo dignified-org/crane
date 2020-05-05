@@ -4,6 +4,10 @@ import Pusher from 'pusher';
 import { sharedConfig } from '../../../config';
 import { serverConfig } from '../../../config/server';
 
+import { sentry } from '../../../sentry';
+
+sentry();
+
 const cors = Cors({
   methods: ['POST', 'HEAD'],
 });

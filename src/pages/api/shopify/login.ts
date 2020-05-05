@@ -17,6 +17,10 @@ import { findStoreByDomain } from '../../../mongo';
 import { generateAuthRedirect, AccessMode } from '../../../shopify/auth';
 import { validateNonce, Location } from '../../../shopify/nonce';
 
+import { sentry } from '../../../sentry';
+
+sentry();
+
 export async function authorizeShopifyCallback(
   req: NextApiRequest,
   res: NextApiResponse,

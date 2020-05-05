@@ -3,6 +3,10 @@ import safeCompare from 'safe-compare';
 import { createHmac } from 'crypto';
 import { serverConfig } from '../../../config/server';
 
+import { sentry } from '../../../sentry';
+
+sentry();
+
 export enum WebhookHeader {
   AccessToken = 'X-Shopify-Access-Token',
   Hmac = 'X-Shopify-Hmac-Sha256',
