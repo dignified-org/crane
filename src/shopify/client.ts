@@ -14,7 +14,7 @@ export function createClient(config: ClientConfig) {
   return new ApolloClient({
     cache: new InMemoryCache(),
     link: new HttpLink({
-      uri: `https://${shop}/admin/api/${API_VERSION}/graphql.json`,
+      uri: `https://${shop}/admin/api/${'2020-04'}/graphql.json`,
       headers: {
         'X-Shopify-Access-Token': token,
       },

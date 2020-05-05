@@ -47,7 +47,7 @@ export function sentry(release: string = sharedConfig.SENTRY_RELEASE) {
           scope.setExtra('statusCode', err.statusCode);
         }
 
-        if (ctx) {
+        if (ctx && ctx?.req && ctx?.res) {
           const { req, res, errorInfo, query, pathname } = ctx;
 
           if (res && res.statusCode) {

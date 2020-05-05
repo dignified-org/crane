@@ -14,7 +14,7 @@ const schema = makeExecutableSchema({
 });
 
 const http = new HttpLink({
-  uri: `https://shopify.com/admin/api/${'2020-04'}/graphql`,
+  uri: `https://shopify.com/admin/api/${'2020-04'}/graphql.json`,
   fetch,
 });
 

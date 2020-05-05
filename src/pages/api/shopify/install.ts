@@ -1,12 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import gql from 'graphql-tag';
 import { authorizeShopifyCallback } from './login';
-import { upsertStoreByDomain } from '../../../mongo';
+import { installStoreByDomain } from '../../../mongo';
 import { sharedConfig } from '../../../config';
 import { Location } from '../../../shopify/nonce';
 
 import { sentry } from '../../../sentry';
+import { createClient } from '../../../shopify/client';
 
-sentry();
+const { captureException } = sentry();
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const authResponse = await authorizeShopifyCallback(req, res);
@@ -15,30 +17,35 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const { accessTokenData, nonce } = authResponse;
+  const {
+    accessTokenData,
+    nonce: { search, token = '', pathname, location },
+  } = authResponse;
 
-  const { shop, token } = req.query;
+  const { shop } = req.query;
 
   const { access_token: accessToken, scope: rawScope } = accessTokenData;
 
-  await upsertStoreByDomain({
+  await installStoreByDomain({
     domain: shop as string,
     scopes: rawScope.split(','),
     token: accessToken,
   });
 
-  const path = nonce.pathname.endsWith('/')
-    ? nonce.pathname.substring(0, nonce.pathname.length - 1)
-    : nonce.pathname;
+  const host = req.headers.host as string;
 
-  if (nonce.location === Location.Admin || path === '') {
+  const path = pathname.endsWith('/')
+    ? pathname.substring(0, pathname.length - 1)
+    : pathname;
+
+  if (location === Location.Admin || path === '') {
     res.writeHead(302, {
       Location: `https://${shop}/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
-        sharedConfig.SHOPIFY_API_KEY}${path}?token=${token}&${nonce.search}`,
+        sharedConfig.SHOPIFY_API_KEY}${path}?token=${token}&${search}`,
     });
   } else {
     res.writeHead(302, {
-      Location: `https://${req.headers.host}${path}?token=${token}&${nonce.search}`,
+      Location: `https://${host}${path}?token=${token}&${search}`,
     });
   }
   res.end();

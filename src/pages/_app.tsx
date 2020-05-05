@@ -19,6 +19,7 @@ import { client } from '../graph';
 import { issueNonce, Location } from '../shopify/nonce';
 
 import { sentry } from '../sentry';
+import { REQUIRED_SCOPES } from '../shopify/scopes';
 
 sentry();
 
@@ -43,7 +44,7 @@ export function redirectToLogin(shop: string) {
       sharedConfig.SHOPIFY_API_KEY,
     ),
     redirect: `https://${window.location.hostname}/api/shopify/login`,
-    scopes: ['write_products'],
+    scopes: REQUIRED_SCOPES,
     apiKey: sharedConfig.SHOPIFY_API_KEY,
   });
 

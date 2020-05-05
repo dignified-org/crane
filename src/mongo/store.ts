@@ -35,8 +35,17 @@ export interface UpsertStoreByDomainInput {
   scopes: Store['scopes'];
 }
 
-export async function upsertStoreByDomain(input: UpsertStoreByDomainInput) {
+export async function installStoreByDomain(input: UpsertStoreByDomainInput) {
   const { domain } = input;
   await connect();
-  return await stores.findOneAndUpdate({ domain }, input, { upsert: true });
+  return await stores.findOneAndUpdate(
+    { domain },
+    { ...input, installed: true },
+    { upsert: true },
+  );
+}
+
+export async function uninstallStoreByDomain(domain: string) {
+  await connect();
+  return await stores.findOneAndUpdate({ domain }, { installed: false });
 }

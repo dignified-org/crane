@@ -1,9 +1,11 @@
 import { NextApiRequest, NextApiResponse } from 'next';
+import bodyParser from 'body-parser';
 import safeCompare from 'safe-compare';
 import { createHmac } from 'crypto';
 import { serverConfig } from '../../../config/server';
 
 import { sentry } from '../../../sentry';
+import { uninstallStoreByDomain } from '../../../mongo';
 
 sentry();
 
@@ -92,31 +94,49 @@ function validHeader(header?: string | string[]) {
   return header && !Array.isArray(header);
 }
 
-export default (req: NextApiRequest, res: NextApiResponse) => {
+const connectParser = bodyParser.text({ type: 'application/json' });
+
+const parser = (req: NextApiRequest, res: NextApiResponse) => {
+  return new Promise((resolve, reject) => {
+    connectParser(req, res, err => {
+      if (err instanceof Error) {
+        reject(err);
+      }
+      resolve();
+    });
+  });
+};
+
+export default async (req: NextApiRequest, res: NextApiResponse) => {
   // Validate webhook
   // https://github.com/Shopify/quilt/blob/master/packages/koa-shopify-webhooks/src/receive.ts
-  const hmac = goAwayArray(req?.headers[WebhookHeader.Hmac]);
-  const topic = goAwayArray(req?.headers[WebhookHeader.Topic]);
-  const domain = goAwayArray(req?.headers[WebhookHeader.Domain]);
+  const hmac = goAwayArray(req?.headers[WebhookHeader.Hmac.toLowerCase()]);
+  const topic = goAwayArray(req?.headers[WebhookHeader.Topic.toLowerCase()]);
+  const domain = goAwayArray(req?.headers[WebhookHeader.Domain.toLowerCase()]);
 
   if (!validHeader(hmac) || !validHeader(topic) || !validHeader(domain)) {
     return res.status(403).send('Forbidden');
   }
 
-  const rawBody = req.body;
+  await parser(req, res);
 
   const generatedHash = createHmac('sha256', serverConfig.SHOPIFY_SHARED_SECRET)
-    .update(rawBody, 'utf8')
+    .update(req.body, 'utf8')
     .digest('base64');
 
   if (!safeCompare(generatedHash, hmac)) {
-    return res.status(403).send('Forbidden');
+    res.status(403).send('Forbidden');
+    return;
   }
 
-  // JSON parse is safe, since HMAC is valid
-  const body = JSON.parse(rawBody);
-
-  console.log(body);
+  switch (topic) {
+    case 'app/uninstalled': {
+      await uninstallStoreByDomain(domain);
+      break;
+    }
+    default:
+      console.warn(`unhandled webhook ${topic}`);
+  }
 
   res.status(200).send('ok');
 };

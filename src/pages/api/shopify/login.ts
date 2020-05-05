@@ -3,11 +3,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { serialize } from 'cookie';
 import querystring from 'querystring';
 import jwt from 'jsonwebtoken';
-import {
-  validateShop,
-  haveRequiredScopes,
-  REQUIRED_SCOPES,
-} from '../../../shopify';
+import { validateShop } from '../../../shopify';
 import validateHmac from '../../../shopify/utils';
 import { serverConfig } from '../../../config/server';
 import { sharedConfig } from '../../../config';
@@ -15,9 +11,11 @@ import { upsertUserByShopifyId } from '../../../mongo/user';
 import { insertLogin } from '../../../mongo/login';
 import { findStoreByDomain } from '../../../mongo';
 import { generateAuthRedirect, AccessMode } from '../../../shopify/auth';
-import { validateNonce, Location } from '../../../shopify/nonce';
+import { validateNonce, Location, issueNonce } from '../../../shopify/nonce';
 
 import { sentry } from '../../../sentry';
+import { haveRequiredScopes, REQUIRED_SCOPES } from '../../../shopify/scopes';
+import { configureWebhooks } from '../../../shopify/webhooks';
 
 sentry();
 
@@ -87,7 +85,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const { accessTokenData, nonce } = validationResponse;
 
-  const { shop, state } = req.query;
+  const { shop } = req.query;
 
   const {
     access_token: accessToken,
@@ -153,20 +151,37 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }),
   );
 
+  // Ensure webhooks are valid
+  try {
+    await configureWebhooks(
+      shop as string,
+      accessToken,
+      `https://${req.headers.host}/api/shopify/webhooks`,
+    );
+  } catch (e) {
+    console.error(e);
+  }
+
   const store = await findStoreByDomain(shop as string);
 
   // Need to install / reinstall store
   if (!store || !store.installed || !haveRequiredScopes(store.scopes)) {
     const redirect = generateAuthRedirect({
       mode: AccessMode.Offline,
-      nonce: state as string,
+      nonce: issueNonce(
+        {
+          ...nonce,
+          token,
+        },
+        sharedConfig.SHOPIFY_API_KEY,
+      ),
       scopes: REQUIRED_SCOPES,
       shop: shop as string,
       apiKey: sharedConfig.SHOPIFY_API_KEY,
       redirect: `https://${req.headers.host}/api/shopify/install`,
     });
     res.writeHead(302, {
-      Location: `${redirect}&token=${token}`,
+      Location: `${redirect}`,
     });
     res.end();
     return;

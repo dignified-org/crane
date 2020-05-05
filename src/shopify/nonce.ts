@@ -43,6 +43,11 @@ export interface Nonce {
    * Which sort of OAuth2 grant is requested
    */
   mode: AccessMode;
+
+  /**
+   * Crane access token that may need to make it through install
+   */
+  token?: string;
 }
 
 /**
@@ -61,8 +66,6 @@ export function issueNonce(nonce: Nonce, apiKey: string) {
   sp.delete('session');
   sp.delete('timestamp');
   sp.delete('token');
-
-  console.log(sp.toString());
 
   const body = JSON.stringify({
     ...nonce,
