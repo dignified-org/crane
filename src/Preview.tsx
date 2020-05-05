@@ -66,7 +66,6 @@ function PreviewInternal(props: PreviewInternalProps) {
   const [iframeLoading, setIframeLoading] = useState(true);
 
   const handleIframeLoad = useCallback((event?: any) => {
-    console.log('hi!', event);
     setIframeLoading(false);
   }, []);
 
@@ -172,7 +171,7 @@ function PreviewInternal(props: PreviewInternalProps) {
               <iframe
                 title="preview"
                 ref={iframeRef}
-                src="https://crane-test-8148386536.gtsb.io/"
+                src="https://gatsby-crane-starter-1854563661.gtsb.io/"
                 width="100%"
                 height="100%"
                 frameBorder={0}
