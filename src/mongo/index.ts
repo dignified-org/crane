@@ -8,7 +8,7 @@ const { captureException } = sentry();
 // mongoose.set('bufferCommands', false);
 mongoose.set('useFindAndModify', false);
 
-const CONNECTION_URL = `mongodb://${serverConfig.MONGO_URI}`;
+const CONNECTION_URL = serverConfig.MONGO_URL;
 
 let connected = false;
 export async function connect() {
@@ -20,8 +20,6 @@ export async function connect() {
     await mongoose.connect(CONNECTION_URL, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      user: serverConfig.MONGO_USERNAME,
-      pass: serverConfig.MONGO_PASSWORD,
       dbName: serverConfig.MONGO_DATABASE,
     });
     connected = true;
