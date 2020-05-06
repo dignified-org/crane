@@ -89,11 +89,21 @@ function App({ Component, pageProps }: AppProps) {
     return null;
   }
 
+  const framed = window !== window.top;
+  const url = new URL(window.location.href);
+
+  const app = framed || !!url.searchParams.get('app');
+
+  let C: any = Component;
+  if (app && C.App) {
+    C = C.App;
+  }
+
   return (
     <BrowserOnly>
       <ApolloProvider client={client}>
         <AppProvider i18n={en} linkComponent={Link}>
-          <Component {...pageProps} />
+          <C {...pageProps} />
         </AppProvider>
       </ApolloProvider>
     </BrowserOnly>

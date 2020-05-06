@@ -5,7 +5,7 @@ import { sentry } from '../sentry';
 const { captureException } = sentry();
 
 // Do not allow usage before connected
-// mongoose.set('bufferCommands', false);
+mongoose.set('bufferCommands', false);
 mongoose.set('useFindAndModify', false);
 
 const CONNECTION_URL = serverConfig.MONGO_URL;
@@ -25,6 +25,7 @@ export async function connect() {
     connected = true;
   } catch (e) {
     captureException(e, {});
+    console.error(e);
     process.exit(1);
   }
 }
