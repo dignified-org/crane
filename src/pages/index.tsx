@@ -88,10 +88,10 @@ IndexRoute.App = function App() {
         </Layout.Section>
         <Layout.Section>
           <AccountConnection
-            avatarUrl={me?.vercel.avatar}
+            avatarUrl={me?.vercel?.avatar}
             title="Vercel (previously Zeit)"
             accountName="Vercel (previously Zeit)"
-            connected={!!me?.vercel.id}
+            connected={!!me?.vercel?.id}
             action={{
               content: me?.vercel
                 ? 'Reconnect Versel account'
