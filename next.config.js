@@ -8,11 +8,12 @@ if (process.env.NODE_ENV === 'development') {
 
 module.exports = nextSourceMaps({
   env: {
+    SENTRY_DSN: process.env.SENTRY_DSN,
     SHOPIFY_API_KEY: process.env.SHOPIFY_API_KEY,
     SHOPIFY_APP_HANDLE: process.env.SHOPIFY_APP_HANDLE,
     PUSHER_API_KEY: process.env.PUSHER_API_KEY,
     PUSHER_CLUSTER: process.env.PUSHER_CLUSTER,
-    SENTRY_DSN: process.env.SENTRY_DSN,
+    VERCEL_API_KEY: process.env.VERCEL_API_KEY,
   },
   webpack: (config, { isServer, buildId }) => {
     // Sentry
