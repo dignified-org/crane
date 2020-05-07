@@ -29,7 +29,13 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     }
 
     const cookieName = `_${(shop as string).replace('.myshopify.com', '')}`;
-    const cookies = parse(req.headers.cookie);
+    let cookies;
+    try {
+      cookies = parse(req.headers.cookie);
+    } catch (e) {
+      res.status(403).send('Bad request');
+      return;
+    }
 
     const tokenSignature = cookies[cookieName];
 

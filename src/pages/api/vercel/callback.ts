@@ -3,6 +3,8 @@ import fetch from 'isomorphic-unfetch';
 import querystring from 'querystring';
 import { sharedConfig } from '../../../config';
 import { serverConfig } from '../../../config/server';
+import { validateNonce, findUser } from '../../../vercel';
+import { upsertVercel } from '../../../mongo';
 
 export default async (req: NextApiRequest, res: NextApiResponse) => {
   const { code, state } = req.query;
@@ -12,7 +14,12 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  // @todo validate nonce
+  const nonce = await validateNonce(state as string);
+
+  if (!nonce) {
+    res.status(403).send('Forbidden');
+    return;
+  }
 
   /* eslint-disable @typescript-eslint/camelcase */
   const accessTokenQuery = querystring.stringify({
@@ -40,19 +47,30 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const accessTokenData = await accessTokenResponse.json();
+  const {
+    access_token: accessToken,
+    ...accessTokenData
+  } = await accessTokenResponse.json();
 
-  res.json(accessTokenData);
+  console.log(accessTokenData); // @todo do something with this
+
+  const user = await findUser(accessToken);
+
+  await upsertVercel(user, nonce.userId, accessToken);
+
+  // TODO nonce based redirect
 
   // if (location === Location.Admin || path === '') {
-  //   res.writeHead(302, {
-  //     Location: `https://${shop}/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
-  //       sharedConfig.SHOPIFY_API_KEY}${path}?token=${token}&${search}`,
-  //   });
+  res.writeHead(302, {
+    Location: `https://${
+      nonce.shop
+    }/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
+      sharedConfig.SHOPIFY_API_KEY}`,
+  });
   // } else {
   //   res.writeHead(302, {
   //     Location: `https://${host}${path}?token=${token}&${search}`,
   //   });
   // }
-  // res.end();
+  res.end();
 };

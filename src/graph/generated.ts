@@ -12,6 +12,19 @@ export type Scalars = {
   Float: number;
 };
 
+export type Mutation = {
+   __typename?: 'Mutation';
+  /** Returns a redirect to authenticate with vercel */
+  userLinkVercel: Scalars['String'];
+  /** Deploy starter theme to vercel */
+  vercelDeployStarter?: Maybe<Scalars['String']>;
+};
+
+
+export type MutationVercelDeployStarterArgs = {
+  name: Scalars['String'];
+};
+
 export type Query = {
    __typename?: 'Query';
   me: User;
@@ -19,9 +32,22 @@ export type Query = {
 
 export type User = {
    __typename?: 'User';
+  id: Scalars['String'];
   firstName: Scalars['String'];
   lastName: Scalars['String'];
   email: Scalars['String'];
+  vercel?: Maybe<Vercel>;
+};
+
+export type Vercel = {
+   __typename?: 'Vercel';
+  id: Scalars['ID'];
+  email: Scalars['String'];
+  name: Scalars['String'];
+  username: Scalars['String'];
+  date: Scalars['String'];
+  avatar: Scalars['String'];
+  updatedAt: Scalars['String'];
 };
 
 export type MeQueryVariables = {};
@@ -32,6 +58,10 @@ export type MeQuery = (
   & { me: (
     { __typename?: 'User' }
     & Pick<User, 'firstName' | 'lastName' | 'email'>
+    & { vercel?: Maybe<(
+      { __typename?: 'Vercel' }
+      & Pick<Vercel, 'id' | 'email' | 'name' | 'username' | 'avatar' | 'updatedAt'>
+    )> }
   ) }
 );
 

@@ -1,12 +1,33 @@
+type Vercel {
+  id: ID!
+  email: String!
+  name: String!
+  username: String!
+  date: String!
+  avatar: String!
+  updatedAt: String!
+}
+
 type User {
+  id: String!
   firstName: String!
   lastName: String!
   email: String!
+  vercel: Vercel
 }
 
 type Query {
   me: User!
 }
 
-# type Mutation {
-# }
+type Mutation {
+  """
+  Returns a redirect to authenticate with vercel
+  """
+  userLinkVercel: String!
+
+  """
+  Deploy starter theme to vercel
+  """
+  vercelDeployStarter(name: String!): String
+}

@@ -1,4 +1,4 @@
-import { ApolloClient, HttpLink, InMemoryCache } from '@apollo/client';
+import { ApolloClient, HttpLink, InMemoryCache, gql } from '@apollo/client';
 
 export const API_VERSION = '2020-04';
 
@@ -20,4 +20,35 @@ export function createClient(config: ClientConfig) {
       },
     }),
   });
+}
+
+const STOREFRONT_TOKEN_CREATE_MUTATION = gql`
+  mutation StorefrontTokenCreate($name: String!) {
+    storefrontAccessTokenCreate(input: { title: $name }) {
+      storefrontAccessToken {
+        accessToken
+      }
+    }
+  }
+`;
+
+export async function createStorefrontToken(
+  shop: string,
+  token: string,
+  name: string,
+) {
+  const client = createClient({
+    shop,
+    token,
+  });
+
+  const result = await client.mutate({
+    mutation: STOREFRONT_TOKEN_CREATE_MUTATION,
+    variables: {
+      name,
+    },
+  });
+
+  return result.data?.storefrontAccessTokenCreate?.storefrontAccessToken
+    ?.accessToken;
 }

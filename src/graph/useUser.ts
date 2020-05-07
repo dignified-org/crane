@@ -9,6 +9,14 @@ const ME_QUERY = gql`
       firstName
       lastName
       email
+      vercel {
+        id
+        email
+        name
+        username
+        avatar
+        updatedAt
+      }
     }
   }
 `;

@@ -22,6 +22,7 @@ const CONFIG_SCHEMA = object<ServerConfig>({
   VERCEL_SHARED_SECRET: string().required(),
 }).noUnknown(false);
 
-export const serverConfig: ServerConfig = CONFIG_SCHEMA.validateSync(
-  process.env,
-);
+export const serverConfig: ServerConfig = CONFIG_SCHEMA.validateSync({
+  ...process.env,
+  VERCEL_SHARED_SECRET: process.env.CRANE_VERCEL_API_KEY,
+});

@@ -3,6 +3,7 @@
 import { GraphQLResolveInfo } from 'graphql';
 import { Context } from './context';
 export type Maybe<T> = T | null;
+export type RequireFields<T, K extends keyof T> = { [X in Exclude<keyof T, K>]?: T[X] } & { [P in K]-?: NonNullable<T[P]> };
 
 
 /** All built-in and custom scalars, mapped to their actual values */
@@ -14,6 +15,19 @@ export type Scalars = {
   Float: number;
 };
 
+export type Mutation = {
+   __typename?: 'Mutation';
+  /** Returns a redirect to authenticate with vercel */
+  userLinkVercel: Scalars['String'];
+  /** Deploy starter theme to vercel */
+  vercelDeployStarter?: Maybe<Scalars['String']>;
+};
+
+
+export type MutationVercelDeployStarterArgs = {
+  name: Scalars['String'];
+};
+
 export type Query = {
    __typename?: 'Query';
   me: User;
@@ -21,9 +35,22 @@ export type Query = {
 
 export type User = {
    __typename?: 'User';
+  id: Scalars['String'];
   firstName: Scalars['String'];
   lastName: Scalars['String'];
   email: Scalars['String'];
+  vercel?: Maybe<Vercel>;
+};
+
+export type Vercel = {
+   __typename?: 'Vercel';
+  id: Scalars['ID'];
+  email: Scalars['String'];
+  name: Scalars['String'];
+  username: Scalars['String'];
+  date: Scalars['String'];
+  avatar: Scalars['String'];
+  updatedAt: Scalars['String'];
 };
 
 
@@ -102,6 +129,9 @@ export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>,
   User: ResolverTypeWrapper<User>,
   String: ResolverTypeWrapper<Scalars['String']>,
+  Vercel: ResolverTypeWrapper<Vercel>,
+  ID: ResolverTypeWrapper<Scalars['ID']>,
+  Mutation: ResolverTypeWrapper<{}>,
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>,
 };
 
@@ -110,7 +140,15 @@ export type ResolversParentTypes = {
   Query: {},
   User: User,
   String: Scalars['String'],
+  Vercel: Vercel,
+  ID: Scalars['ID'],
+  Mutation: {},
   Boolean: Scalars['Boolean'],
+};
+
+export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
+  userLinkVercel?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  vercelDeployStarter?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<MutationVercelDeployStarterArgs, 'name'>>,
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
@@ -118,15 +156,30 @@ export type QueryResolvers<ContextType = Context, ParentType extends ResolversPa
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
+  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  vercel?: Resolver<Maybe<ResolversTypes['Vercel']>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
+};
+
+export type VercelResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Vercel'] = ResolversParentTypes['Vercel']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
+  email?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  username?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  date?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  avatar?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  updatedAt?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
 export type Resolvers<ContextType = Context> = {
+  Mutation?: MutationResolvers<ContextType>,
   Query?: QueryResolvers<ContextType>,
   User?: UserResolvers<ContextType>,
+  Vercel?: VercelResolvers<ContextType>,
 };
 
 
