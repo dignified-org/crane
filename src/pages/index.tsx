@@ -100,7 +100,7 @@ IndexRoute.App = function App() {
               ...({ loading } as any),
             }}
             details={
-              me?.vercel === null ? (
+              me?.vercel ? (
                 <p>
                   Connected to Vercel as {me.vercel.name}{' '}
                   {formatDistanceToNow(
