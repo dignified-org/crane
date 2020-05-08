@@ -9,7 +9,7 @@ type Vercel {
 }
 
 type User {
-  id: String!
+  id: ID!
   firstName: String!
   lastName: String!
   email: String!
