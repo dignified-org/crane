@@ -155,15 +155,16 @@ export async function deployFromRepo(token: string, projectName: string) {
     target: 'production',
     source: {
       type: 'github',
-      projectId: 'dignified-org%2fgatsby-crane-starter',
-      fullName: 'dignified-org/gatsby-crane-starter',
+      projectId: 'dignified-org%2fgatsby-starter-crane',
+      fullName: 'dignified-org/gatsby-starter-crane',
       ref: 'master',
       subdir: '',
     },
     projectSettings: {
       framework: 'gatsby',
       devCommand: null,
-      buildCommand: null,
+      buildCommand:
+        'GATSBY_EXPERIMENTAL_PAGE_BUILD_ON_DATA_CHANGES=true yarn build',
       outputDirectory: null,
     },
   };

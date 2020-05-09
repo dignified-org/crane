@@ -1,5 +1,7 @@
 export const REQUIRED_SCOPES = [
-  'write_products',
+  'read_products',
+  'read_product_listings',
+  'write_resource_feedbacks',
   'unauthenticated_read_product_listings',
   'unauthenticated_read_product_tags',
   'unauthenticated_write_checkouts',

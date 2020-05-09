@@ -55,10 +55,15 @@ export const resolvers: Resolvers = {
         `crane-${shopSlug}-shop-name-${name}`,
         shop,
       );
-      const tokenSecret = await createSecret(
+      const storefrontSecret = await createSecret(
         vercel.token,
-        `crane-${shopSlug}-shop-token-${name}`,
+        `crane-${shopSlug}-shop-storefront-${name}`,
         storefrontToken,
+      );
+      const adminSecret = await createSecret(
+        vercel.token,
+        `crane-${shopSlug}-shop-admin-${name}`,
+        context.store.token, // NOT FOR PRODUCTION!!
       );
 
       await createEnv(vercel.token, project.id, 'SHOP_NAME', shopSecret.uid);
@@ -66,7 +71,13 @@ export const resolvers: Resolvers = {
         vercel.token,
         project.id,
         'SHOPIFY_ACCESS_TOKEN',
-        tokenSecret.uid,
+        storefrontSecret.uid,
+      );
+      await createEnv(
+        vercel.token,
+        project.id,
+        'SHOPIFY_ADMIN_TOKEN',
+        adminSecret.uid,
       );
 
       const { url } = await deployFromRepo(vercel.token, name);
