@@ -125,8 +125,7 @@ function AppSetup() {
 
   useEffect(() => {
     return saveBar.subscribe(ContextualSaveBar.Action.SAVE, () => {
-      alert('Settings are not yet implemented. Interface demonstration');
-      formik.resetForm();
+      formik.submitForm();
     });
   }, [formik, formik.dirty, saveBar]);
 
@@ -250,7 +249,9 @@ function AppSetup() {
           onClose={handleCloseConfirmModal}
           primaryAction={{
             content: 'Deploy',
-            onAction: handleExitSetup,
+            onAction: () => {
+              formik.submitForm();
+            },
           }}
           secondaryActions={[
             { content: 'Cancel', onAction: handleCloseConfirmModal },

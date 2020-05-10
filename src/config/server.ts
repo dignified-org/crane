@@ -28,5 +28,5 @@ const CONFIG_SCHEMA = object<ServerConfig>({
 
 export const serverConfig: ServerConfig = CONFIG_SCHEMA.validateSync({
   ...process.env,
-  VERCEL_SHARED_SECRET: process.env.CRANE_VERCEL_API_KEY,
+  VERCEL_SHARED_SECRET: process.env.CRANE_VERCEL_SHARED_SECRET,
 });
