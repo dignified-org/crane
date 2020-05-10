@@ -11,7 +11,7 @@ import {
   Link,
   FormLayout,
 } from '@shopify/polaris';
-import { Modal } from '@shopify/app-bridge-react';
+import { Modal, Loading } from '@shopify/app-bridge-react';
 import { useRouter } from 'next/dist/client/router';
 import { useToggle } from '@shopify/react-hooks';
 import gql from 'graphql-tag';
@@ -208,6 +208,7 @@ function AppSetup() {
 
   return (
     <FormikProvider value={formik}>
+      {deploying && <Loading />}
       <Page title="Crane setup">
         <Layout>
           <Layout.Section>

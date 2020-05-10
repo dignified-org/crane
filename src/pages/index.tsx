@@ -103,7 +103,7 @@ function App() {
 
   if (!me || !site) {
     return (
-      <SkeletonPage title="Crane">
+      <SkeletonPage title="Crane dashboard">
         <SkeletonBodyText lines={4} />
       </SkeletonPage>
     );
@@ -111,7 +111,7 @@ function App() {
 
   return (
     <Page
-      title="Crane"
+      title="Crane dashboard"
       primaryAction={{
         content: 'Deploy now',
         onAction: handleOpenDeployNowModal,
@@ -188,23 +188,44 @@ function App() {
             </>
           }
         >
-          {site.deployments.map(d => {
+          {site.deployments.map((d, index) => {
             return (
               <Card
                 key={d.id}
                 sectioned
-                subdued
-                title={`Build started ${formatDistanceToNow(
-                  d.createdAt * 1000,
-                )} ago`}
+                subdued={index !== 0}
+                title={`Build ${
+                  // eslint-disable-next-line no-nested-ternary
+                  !d.error && !d.building
+                    ? 'completed'
+                    : d.error
+                    ? 'completed with errors'
+                    : 'started'
+                } ${formatDistanceToNow(d.createdAt * 1000)} ago`}
               >
                 {d.building && (
-                  <p>Still building, will automatically deploy once complete</p>
+                  <>
+                    <p>
+                      Still building, will automatically deploy once complete
+                    </p>
+                    <br />
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <Link url={d.url} external>
+                      See in Vercel
+                    </Link>
+                  </>
                 )}
                 {d.error && (
-                  <TextStyle variation="negative">
-                    This build has failed due to an error
-                  </TextStyle>
+                  <>
+                    <TextStyle variation="negative">
+                      This build has failed due to an error
+                    </TextStyle>
+                    <br />
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <Link url={d.url} external>
+                      See in Vercel
+                    </Link>
+                  </>
                 )}
                 {!d.error && !d.building && (
                   <TextStyle>
