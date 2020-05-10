@@ -65,7 +65,7 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     Location: `https://${
       nonce.shop
     }/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
-      sharedConfig.SHOPIFY_API_KEY}`,
+      sharedConfig.SHOPIFY_API_KEY}/setup`,
   });
   // } else {
   //   res.writeHead(302, {
