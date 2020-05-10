@@ -1,3 +1,19 @@
+function getStorage(name: string, storage) {
+  try {
+    return JSON.parse(storage.getItem(name));
+  } catch (e) {
+    return null;
+  }
+}
+
+function setStorage(name: string, value: string, storage) {
+  try {
+    const v = JSON.stringify(value);
+    storage.setItem(name, v);
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+}
+
 export function shop() {
   // ignore SSR for now
   if (typeof window === 'undefined') {
@@ -10,13 +26,10 @@ export function shop() {
   // 3. Local storage
   const url = new URL(window.location.href);
   const s =
-    url.searchParams.get('shop') ??
-    window.sessionStorage.getItem('shop') ??
-    window.localStorage.getItem('latest-shop');
+    url.searchParams.get('shop') ?? getStorage('shop', window.sessionStorage);
 
   if (shop) {
-    window.sessionStorage.setItem('shop', s);
-    window.localStorage.setItem('latest-shop', s);
+    setStorage('shop', s, window.sessionStorage);
   }
 
   return s;

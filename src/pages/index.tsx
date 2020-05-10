@@ -11,12 +11,13 @@ import {
 } from '@shopify/polaris';
 import { ViewMinor } from '@shopify/polaris-icons';
 import { Redirect, Toast } from '@shopify/app-bridge/actions';
-import { Modal } from '@shopify/app-bridge-react';
+import { Modal, TitleBar } from '@shopify/app-bridge-react';
 import { createApp } from '@shopify/app-bridge';
 import gql from 'graphql-tag';
 import { useMutation } from '@apollo/client';
 import { formatDistanceToNow } from 'date-fns';
 import { useToggle } from '@shopify/react-hooks';
+import DefaultError from 'next/error';
 import { useMe } from '../graph/useUser';
 import { sharedConfig, shop } from '../config';
 import Welcome from '../components/Welcome';
@@ -25,7 +26,7 @@ function IndexRoute() {
   const me = useMe();
 
   // @todo only show setup when needed
-  return <Page title="Crane">todo</Page>;
+  return <DefaultError statusCode={404} />;
 }
 
 // const USER_LINK_VERCEL_MUTATION = gql`
@@ -63,6 +64,7 @@ function App() {
         },
       ]}
     >
+      <TitleBar title="" />
       <Layout>
         <Layout.Section>
           <MediaCard

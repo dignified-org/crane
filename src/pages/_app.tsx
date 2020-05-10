@@ -4,6 +4,8 @@ import React, {
   createContext,
   ReactNode,
   useContext,
+  useCallback,
+  useEffect,
 } from 'react';
 import { AppProps } from 'next/app';
 
@@ -16,6 +18,8 @@ import { Redirect } from '@shopify/app-bridge/actions';
 import {
   Context as ShopifyAppBridgeContext,
   RoutePropagator,
+  Loading,
+  useClientRouting,
 } from '@shopify/app-bridge-react';
 
 import { ApolloProvider } from '@apollo/client';
@@ -98,6 +102,47 @@ function mountApp() {
   return true;
 }
 
+function RouteChangeLoading() {
+  const router = useRouter();
+
+  const [loading, setLoading] = useState(false);
+
+  const handleRouteChangeStart = useCallback(() => {
+    setLoading(true);
+  }, [setLoading]);
+
+  const handleRouteChangeComplete = useCallback(() => {
+    setLoading(false);
+  }, [setLoading]);
+
+  const [newRoute, setNewRoute] = useState();
+
+  useClientRouting({ replace: setNewRoute as any });
+
+  useEffect(() => {
+    if (newRoute) {
+      router.replace(newRoute, newRoute);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [newRoute]);
+
+  useEffect(() => {
+    // Undefined on the server
+    if (!router) {
+      return;
+    }
+
+    router.events.on('routeChangeStart', handleRouteChangeStart);
+    router.events.on('routeChangeComplete', handleRouteChangeComplete);
+    return () => {
+      router.events.off('routeChangeStart', handleRouteChangeStart);
+      router.events.off('routeChangeComplete', handleRouteChangeComplete);
+    };
+  }, [handleRouteChangeComplete, handleRouteChangeStart, router]);
+
+  return loading ? <Loading /> : null;
+}
+
 const AppBridgeContext = createContext<ClientApplication<any>>(null);
 
 export function useAppBridge() {
@@ -125,6 +170,7 @@ function AppBridgeProvider(props: AppBridgeProviderProps) {
       <ShopifyAppBridgeContext.Provider value={appBridge}>
         <>
           <RoutePropagator location={`${router.asPath}`} />
+          <RouteChangeLoading />
           {children}
         </>
       </ShopifyAppBridgeContext.Provider>
