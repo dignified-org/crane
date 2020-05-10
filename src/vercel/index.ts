@@ -84,7 +84,7 @@ export async function createProject(token: string, name: string) {
 
   const project = await response.json();
 
-  return project as VercelUser;
+  return project as VercelProject;
 }
 
 export interface VercelSecret {
@@ -186,4 +186,171 @@ export async function deployFromRepo(token: string, projectName: string) {
   const env = await response.json();
 
   return env as { url: string };
+}
+
+export async function githubVerify(token: string) {
+  const response = await fetch(
+    `https://api.vercel.com/v1/integrations/github/verify`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  const r = await response.json();
+
+  return r as {
+    id: string;
+    login: string;
+  };
+}
+
+export async function createRepo(
+  token: string,
+  projectName: string,
+  githubInstallationId: string,
+) {
+  const body = {
+    name: projectName,
+    installationId: githubInstallationId,
+    private: true,
+  };
+
+  const response = await fetch(
+    'https://api.vercel.com/v1/integrations/github-create-repo',
+    {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  const r = await response.json();
+
+  return r as any;
+}
+
+export async function pushStarterToRepo(
+  token: string,
+  projectName: string,
+  githubUser: string,
+) {
+  const body = {
+    name: 'gatsby',
+    template: 'dignified-org/gatsby-starter-crane',
+    target: `${githubUser}/${projectName}`,
+  };
+
+  const response = await fetch(
+    'https://api.vercel.com/v1/integrations/github-push-repo',
+    {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  const r = await response.json();
+
+  return r as any;
+}
+
+export async function linkProjectToRepo(
+  token: string,
+  projectId: string,
+  githubRepo: string,
+) {
+  const body = {
+    type: 'github',
+    repo: githubRepo,
+  };
+
+  const response = await fetch(
+    `https://api.vercel.com/v4/projects/${projectId}/link`,
+    {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  const r = await response.json();
+
+  return r as any;
+}
+
+export async function createDeployHook(token: string, projectId: string) {
+  const body = {
+    ref: 'master',
+    name: 'Crane',
+  };
+
+  const response = await fetch(
+    `https://api.vercel.com/v2/projects/${projectId}/deploy-hooks`,
+    {
+      method: 'post',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  await response.json(); // Empty response
+
+  const projectResponse = await fetch(
+    `https://api.vercel.com/v2/projects/${projectId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  if (!projectResponse.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  const { link } = await projectResponse.json(); // Empty response
+
+  return link.deployHooks[0].url as string;
 }

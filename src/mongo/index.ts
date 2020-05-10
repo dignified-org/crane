@@ -25,6 +25,7 @@ export async function connect() {
     connected = true;
   } catch (e) {
     captureException(e, {});
+    // eslint-disable-next-line no-console
     console.error(e);
     process.exit(1);
   }
@@ -34,3 +35,4 @@ export * from './store';
 export * from './user';
 export * from './login';
 export * from './vercel';
+export * from './site';

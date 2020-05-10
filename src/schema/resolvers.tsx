@@ -1,14 +1,24 @@
 import { Resolvers } from './generated';
 import { queryMe } from './me';
-import { findVercelByUserId } from '../mongo';
+import { findVercelByUserId, insertSite } from '../mongo';
 import {
   generateAuthRedirect,
   createProject,
   createSecret,
   createEnv,
-  deployFromRepo,
+  // deployFromRepo,
+  githubVerify,
+  createRepo,
+  pushStarterToRepo,
+  linkProjectToRepo,
+  createDeployHook,
 } from '../vercel';
 import { createStorefrontToken } from '../shopify/client';
+
+async function createRepoAndPush(token, name, github) {
+  await createRepo(token, name, github.id);
+  await pushStarterToRepo(token, name, github.login);
+}
 
 export const resolvers: Resolvers = {
   Query: {
@@ -31,6 +41,15 @@ export const resolvers: Resolvers = {
       if (!vercel) {
         throw new Error('Must link Vercel account');
       }
+
+      const github = await githubVerify(vercel.token);
+
+      if (!github) {
+        throw new Error('Must link Github via Vercel');
+      }
+
+      // Try to do this in parallel - these requests are very network heavy
+      const setupRepoPromise = createRepoAndPush(vercel.token, name, github);
 
       const shop = context.store.domain;
       const shopSlug = shop.replace('.myshopify.com', '');
@@ -80,9 +99,22 @@ export const resolvers: Resolvers = {
         adminSecret.uid,
       );
 
-      const { url } = await deployFromRepo(vercel.token, name);
+      // Not needed! Double deploy
+      // const { url } = await deployFromRepo(vercel.token, name);
 
-      return url;
+      await setupRepoPromise;
+      await linkProjectToRepo(vercel.token, project.id, name);
+
+      const deployHook = await createDeployHook(vercel.token, project.id);
+
+      await insertSite({
+        deployHook,
+        id: project.id,
+        name,
+        storeDomain: context.store.domain,
+      });
+
+      return '';
     },
   },
 };

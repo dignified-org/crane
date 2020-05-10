@@ -24,6 +24,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { useFormik, FormikProvider } from 'formik';
 import { TextField } from '@satel/formik-polaris';
+import { object, string } from 'yup';
 import { useAppBridge } from './_app';
 import { useMe } from '../graph/useUser';
 import { shop } from '../config';
@@ -35,6 +36,12 @@ function SetupRoute() {
 const USER_LINK_VERCEL_MUTATION = gql`
   mutation UserLinkVercel {
     userLinkVercel
+  }
+`;
+
+const VERCEL_DEPLOY_STARTER = gql`
+  mutation DeployStarter($name: String!) {
+    vercelDeployStarter(name: $name)
   }
 `;
 
@@ -52,7 +59,7 @@ function AppSetup() {
   const {
     value: confirmModalOpen,
     setTrue: handleOpenConfirmModal,
-    setFalse: handleCloseConfirmModal,
+    setFalse: setConfirmClosed,
   } = useToggle(false);
 
   const handleExitSetup = useCallback(() => {
@@ -85,11 +92,59 @@ function AppSetup() {
       });
   }, [app, mutate]);
 
+  const [deployStarter, { loading: deploying }] = useMutation(
+    VERCEL_DEPLOY_STARTER,
+  );
+
+  const handleCloseConfirmModal = useCallback(() => {
+    if (!deploying) {
+      setConfirmClosed();
+    }
+  }, [deploying, setConfirmClosed]);
+
+  const handleDeployStarter = useCallback(
+    (variables, helpers) => {
+      setConfirmClosed();
+      deployStarter({
+        variables,
+      })
+        .then(() => {
+          const toast = Toast.create(app, {
+            message: 'Website deployed',
+            duration: 2000,
+          });
+          toast.dispatch(Toast.Action.SHOW);
+          return router.replace('/');
+        })
+        .catch(e => {
+          // eslint-disable-next-line no-console
+          console.warn(e);
+          const toast = Toast.create(app, {
+            message: 'Deployment failed',
+            isError: true,
+            duration: 2000,
+          });
+          toast.dispatch(Toast.Action.SHOW);
+          helpers.setSubmitting(false);
+        });
+    },
+    [app, deployStarter, router, setConfirmClosed],
+  );
+
   const formik = useFormik({
     initialValues: {
-      name: `${shop().replace('.myshopify.com', '')}`,
+      name: '',
     },
-    onSubmit: console.log,
+    validationSchema: object({
+      name: string()
+        .label('Name')
+        .min(4)
+        .trim()
+        .required(),
+    }),
+    validateOnChange: false,
+    validateOnBlur: true,
+    onSubmit: handleDeployStarter,
   });
 
   const [saveBar] = useState(() => {
@@ -109,31 +164,39 @@ function AppSetup() {
   });
 
   useEffect(() => {
-    if (formik.dirty && me?.vercel) {
+    if ((formik.dirty && me?.vercel) || deploying) {
       saveBar.set({
         saveAction: {
           disabled: false,
+          loading: deploying,
         },
         discardAction: {
-          disabled: false,
+          disabled: deploying,
         },
       });
     } else {
       saveBar.dispatch(ContextualSaveBar.Action.HIDE);
     }
-  }, [formik.dirty, me, saveBar]);
+  }, [deploying, formik.dirty, me, saveBar]);
 
   useEffect(() => {
     return saveBar.subscribe(ContextualSaveBar.Action.SAVE, () => {
-      formik.submitForm();
+      handleOpenConfirmModal();
     });
-  }, [formik, formik.dirty, saveBar]);
+  }, [formik, formik.dirty, handleOpenConfirmModal, saveBar]);
 
   useEffect(() => {
     return saveBar.subscribe(ContextualSaveBar.Action.DISCARD, () => {
       formik.resetForm();
     });
   }, [formik, formik.dirty, saveBar]);
+
+  useEffect(
+    () => () => {
+      saveBar.dispatch(ContextualSaveBar.Action.HIDE);
+    },
+    [saveBar],
+  );
 
   if (!me) {
     return (
@@ -149,7 +212,7 @@ function AppSetup() {
         <Layout>
           <Layout.Section>
             <Card title={`Welcome to Crane, ${me.firstName}!`} sectioned>
-              <p>todo</p>
+              <p />
             </Card>
           </Layout.Section>
           <Layout.AnnotatedSection title="Step 1">
@@ -163,15 +226,22 @@ function AppSetup() {
                   ? 'Reconnect Vercel account'
                   : 'Connect Vercel account',
                 onAction: handleLinkVercel,
+                disabled: deploying,
                 ...({ loading } as any),
               }}
               details={
                 me?.vercel ? (
                   <p>
-                    Connected to Vercel as {me.vercel.name}{' '}
-                    {formatDistanceToNow(
-                      Number.parseInt(me.vercel.updatedAt, 10),
-                    )}{' '}
+                    Connected as {me.vercel.name}{' '}
+                    <span
+                      title={new Date(
+                        Number.parseInt(me.vercel.updatedAt, 10),
+                      ).toLocaleString()}
+                    >
+                      {formatDistanceToNow(
+                        Number.parseInt(me.vercel.updatedAt, 10),
+                      )}
+                    </span>{' '}
                     ago
                   </p>
                 ) : (
@@ -197,7 +267,8 @@ function AppSetup() {
                 <TextField
                   name="name"
                   label="Name of Vercel deployment"
-                  disabled={formik.isSubmitting || !me?.vercel}
+                  disabled={formik.isSubmitting || !me?.vercel || deploying}
+                  placeholder={`${shop().replace('.myshopify.com', '')}`}
                   helpText={!me?.vercel && 'Please complete step 1'}
                 />
               </FormLayout>
@@ -212,11 +283,13 @@ function AppSetup() {
                 content: 'Deploy website',
                 onAction: handleOpenConfirmModal,
                 disabled: !formik.dirty || !me?.vercel,
+                loading: deploying,
               }}
               secondaryActions={[
                 {
                   content: 'Exit setup',
                   onAction: handleOpenSkipModal,
+                  disabled: deploying,
                 },
               ]}
             />
@@ -238,14 +311,8 @@ function AppSetup() {
         />
         <Modal
           open={confirmModalOpen}
-          title="Please confirm your selection"
-          message={`
-        # Test \n\n\\n\\\n\\\\n
-
-        - 1
-        1. Hello
-        
-        `}
+          title="Are you sure you are ready to deploy?"
+          message="Make sure you have reviewed everything in the summary!"
           onClose={handleCloseConfirmModal}
           primaryAction={{
             content: 'Deploy',
@@ -254,7 +321,10 @@ function AppSetup() {
             },
           }}
           secondaryActions={[
-            { content: 'Cancel', onAction: handleCloseConfirmModal },
+            {
+              content: 'Cancel',
+              onAction: handleCloseConfirmModal,
+            },
           ]}
         />
       </Page>
