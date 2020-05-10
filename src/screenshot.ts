@@ -10,5 +10,7 @@ export function screenshot(url: string) {
   return screenshotscloud.screenshotUrl({
     url,
     width: 800,
+    // eslint-disable-next-line @typescript-eslint/camelcase
+    cache_time: 5 * 60, // 5m
   });
 }

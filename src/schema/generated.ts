@@ -15,12 +15,22 @@ export type Scalars = {
   Float: number;
 };
 
+export type Deployment = {
+   __typename?: 'Deployment';
+  id: Scalars['ID'];
+  createdAt: Scalars['Int'];
+  building: Scalars['Boolean'];
+  error: Scalars['Boolean'];
+  url: Scalars['String'];
+};
+
 export type Mutation = {
    __typename?: 'Mutation';
   /** Returns a redirect to authenticate with vercel */
   userLinkVercel: Scalars['String'];
   /** Deploy starter theme to vercel */
   vercelDeployStarter?: Maybe<Scalars['String']>;
+  vercelDeploy?: Maybe<Scalars['String']>;
 };
 
 
@@ -31,11 +41,22 @@ export type MutationVercelDeployStarterArgs = {
 export type Query = {
    __typename?: 'Query';
   me: User;
+  site?: Maybe<Site>;
+};
+
+export type Site = {
+   __typename?: 'Site';
+  id: Scalars['ID'];
+  name: Scalars['String'];
+  url: Scalars['String'];
+  building: Scalars['Boolean'];
+  thumbnail?: Maybe<Scalars['String']>;
+  deployments: Array<Deployment>;
 };
 
 export type User = {
    __typename?: 'User';
-  id: Scalars['String'];
+  id: Scalars['ID'];
   firstName: Scalars['String'];
   lastName: Scalars['String'];
   email: Scalars['String'];
@@ -128,35 +149,62 @@ export type DirectiveResolverFn<TResult = {}, TParent = {}, TContext = {}, TArgs
 export type ResolversTypes = {
   Query: ResolverTypeWrapper<{}>,
   User: ResolverTypeWrapper<User>,
+  ID: ResolverTypeWrapper<Scalars['ID']>,
   String: ResolverTypeWrapper<Scalars['String']>,
   Vercel: ResolverTypeWrapper<Vercel>,
-  ID: ResolverTypeWrapper<Scalars['ID']>,
-  Mutation: ResolverTypeWrapper<{}>,
+  Site: ResolverTypeWrapper<Site>,
   Boolean: ResolverTypeWrapper<Scalars['Boolean']>,
+  Deployment: ResolverTypeWrapper<Deployment>,
+  Int: ResolverTypeWrapper<Scalars['Int']>,
+  Mutation: ResolverTypeWrapper<{}>,
 };
 
 /** Mapping between all available schema types and the resolvers parents */
 export type ResolversParentTypes = {
   Query: {},
   User: User,
+  ID: Scalars['ID'],
   String: Scalars['String'],
   Vercel: Vercel,
-  ID: Scalars['ID'],
-  Mutation: {},
+  Site: Site,
   Boolean: Scalars['Boolean'],
+  Deployment: Deployment,
+  Int: Scalars['Int'],
+  Mutation: {},
+};
+
+export type DeploymentResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Deployment'] = ResolversParentTypes['Deployment']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
+  createdAt?: Resolver<ResolversTypes['Int'], ParentType, ContextType>,
+  building?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>,
+  error?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>,
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
 export type MutationResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Mutation'] = ResolversParentTypes['Mutation']> = {
   userLinkVercel?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   vercelDeployStarter?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType, RequireFields<MutationVercelDeployStarterArgs, 'name'>>,
+  vercelDeploy?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
 };
 
 export type QueryResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Query'] = ResolversParentTypes['Query']> = {
   me?: Resolver<ResolversTypes['User'], ParentType, ContextType>,
+  site?: Resolver<Maybe<ResolversTypes['Site']>, ParentType, ContextType>,
+};
+
+export type SiteResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Site'] = ResolversParentTypes['Site']> = {
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
+  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  url?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  building?: Resolver<ResolversTypes['Boolean'], ParentType, ContextType>,
+  thumbnail?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
+  deployments?: Resolver<Array<ResolversTypes['Deployment']>, ParentType, ContextType>,
+  __isTypeOf?: isTypeOfResolverFn<ParentType>,
 };
 
 export type UserResolvers<ContextType = Context, ParentType extends ResolversParentTypes['User'] = ResolversParentTypes['User']> = {
-  id?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
   firstName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   lastName?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
@@ -176,8 +224,10 @@ export type VercelResolvers<ContextType = Context, ParentType extends ResolversP
 };
 
 export type Resolvers<ContextType = Context> = {
+  Deployment?: DeploymentResolvers<ContextType>,
   Mutation?: MutationResolvers<ContextType>,
   Query?: QueryResolvers<ContextType>,
+  Site?: SiteResolvers<ContextType>,
   User?: UserResolvers<ContextType>,
   Vercel?: VercelResolvers<ContextType>,
 };

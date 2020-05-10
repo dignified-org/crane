@@ -60,11 +60,6 @@ export async function findUser(token: string) {
   } as VercelUser;
 }
 
-export interface VercelProject {
-  id: string;
-  name: string;
-}
-
 export async function createProject(token: string, name: string) {
   const response = await fetch(`${VERCEL_API}/v1/projects`, {
     method: 'post',
@@ -310,6 +305,50 @@ export async function linkProjectToRepo(
   return r as any;
 }
 
+export interface VercelDeployment {
+  id: string;
+  readyState: string;
+  createdAt: number;
+  target: 'production' | string;
+  url: string;
+}
+
+export interface VercelProject {
+  accountId: string;
+  alias: { domain: string; target: 'PRODUCTION' | string }[];
+  createdAt: number;
+  id: string;
+  name: string;
+  link: { deployHooks: { url: string }[] };
+  latestDeployments: VercelDeployment[];
+  targets: {
+    production: {
+      readyState: 'READY' | string;
+    };
+  };
+}
+
+export async function getProject(token: string, projectId: string) {
+  const projectResponse = await fetch(
+    `https://api.vercel.com/v2/projects/${projectId}?latestDeployments=3`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+
+  if (!projectResponse.ok) {
+    throw new Error('Failed to fetch');
+  }
+
+  const r = await projectResponse.json(); // Empty response
+
+  return r as VercelProject;
+}
+
 export async function createDeployHook(token: string, projectId: string) {
   const body = {
     ref: 'master',
@@ -335,22 +374,7 @@ export async function createDeployHook(token: string, projectId: string) {
 
   await response.json(); // Empty response
 
-  const projectResponse = await fetch(
-    `https://api.vercel.com/v2/projects/${projectId}`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  if (!projectResponse.ok) {
-    throw new Error('Failed to fetch');
-  }
-
-  const { link } = await projectResponse.json(); // Empty response
+  const { link } = await getProject(token, projectId); // Empty response
 
   return link.deployHooks[0].url as string;
 }

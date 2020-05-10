@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import gql from 'graphql-tag';
 import { authorizeShopifyCallback } from './login';
-import { installStoreByDomain } from '../../../mongo';
+import { installStoreByDomain, findSiteByStoreDomain } from '../../../mongo';
 import { sharedConfig } from '../../../config';
 import { Location } from '../../../shopify/nonce';
 
@@ -34,11 +34,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
 
   const host = req.headers.host as string;
 
-  const path = pathname.endsWith('/')
+  let path = pathname.endsWith('/')
     ? pathname.substring(0, pathname.length - 1)
     : pathname;
 
   if (location === Location.Admin || path === '') {
+    const site = await findSiteByStoreDomain(shop as string);
+
+    if (!site) {
+      path = '/setup';
+    }
+
     res.writeHead(302, {
       Location: `https://${shop}/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
         sharedConfig.SHOPIFY_API_KEY}${path}?token=${token}&${search}`,

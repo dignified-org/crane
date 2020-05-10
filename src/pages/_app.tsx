@@ -36,6 +36,7 @@ import { issueNonce, Location } from '../shopify/nonce';
 
 import { sentry } from '../sentry';
 import { REQUIRED_SCOPES } from '../shopify/scopes';
+import { useSite } from '../graph/useUser';
 
 sentry();
 
@@ -164,6 +165,12 @@ function AppBridgeProvider(props: AppBridgeProviderProps) {
 
   const router = useRouter();
   const [appBridge] = useState(initializeAppBridge);
+
+  // Force redirect to setup if not setup
+  // const [site, loading] = useSite();
+  // if (!site && !loading && router.pathname !== '/setup') {
+  //   router.replace('/setup');
+  // }
 
   return (
     <AppBridgeContext.Provider value={appBridge}>

@@ -9,7 +9,7 @@ import { serverConfig } from '../../../config/server';
 import { sharedConfig } from '../../../config';
 import { upsertUserByShopifyId } from '../../../mongo/user';
 import { insertLogin } from '../../../mongo/login';
-import { findStoreByDomain } from '../../../mongo';
+import { findStoreByDomain, findSiteByStoreDomain } from '../../../mongo';
 import { generateAuthRedirect, AccessMode } from '../../../shopify/auth';
 import { validateNonce, Location, issueNonce } from '../../../shopify/nonce';
 
@@ -187,11 +187,17 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
     return;
   }
 
-  const path = nonce.pathname.endsWith('/')
+  let path = nonce.pathname.endsWith('/')
     ? nonce.pathname.substring(0, nonce.pathname.length - 1)
     : nonce.pathname;
 
   if (nonce.location === Location.Admin || path === '') {
+    const site = await findSiteByStoreDomain(shop as string);
+
+    if (!site) {
+      path = '/setup';
+    }
+
     res.writeHead(302, {
       Location: `https://${shop}/admin/apps/${sharedConfig.SHOPIFY_APP_HANDLE ||
         sharedConfig.SHOPIFY_API_KEY}${path}?token=${token}&${nonce.search}`,

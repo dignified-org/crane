@@ -8,19 +8,25 @@ import {
   Link,
   DisplayText,
   MediaCard,
+  SkeletonBodyText,
+  Card,
+  TextStyle,
 } from '@shopify/polaris';
+import { formatDistanceToNow } from 'date-fns';
 import { ViewMinor } from '@shopify/polaris-icons';
 import { Redirect, Toast } from '@shopify/app-bridge/actions';
-import { Modal, TitleBar } from '@shopify/app-bridge-react';
+import { Modal, TitleBar, Loading } from '@shopify/app-bridge-react';
 import { createApp } from '@shopify/app-bridge';
 import gql from 'graphql-tag';
-import { useMutation } from '@apollo/client';
-import { formatDistanceToNow } from 'date-fns';
+import { useMutation, useQuery } from '@apollo/client';
+
 import { useToggle } from '@shopify/react-hooks';
 import DefaultError from 'next/error';
 import { useMe } from '../graph/useUser';
 import { sharedConfig, shop } from '../config';
 import Welcome from '../components/Welcome';
+import { SiteQuery, SiteQueryVariables } from '../graph/generated';
+import { useAppBridge } from './_app';
 
 function IndexRoute() {
   const me = useMe();
@@ -29,14 +35,44 @@ function IndexRoute() {
   return <DefaultError statusCode={404} />;
 }
 
-// const USER_LINK_VERCEL_MUTATION = gql`
-//   mutation UserLinkVercel {
-//     userLinkVercel
-//   }
-// `;
+const SITE_QUERY = gql`
+  query SiteIndex {
+    site {
+      id
+      name
+      url
+      building
+      thumbnail
+      deployments {
+        id
+        createdAt
+        building
+        error
+        url
+      }
+    }
+  }
+`;
+
+export function useSite() {
+  return useQuery<SiteQuery, SiteQueryVariables>(SITE_QUERY, {
+    pollInterval: 3000,
+  });
+}
+
+const REDEPLOY_MUTATION = gql`
+  mutation Redeploy {
+    vercelDeploy
+  }
+`;
 
 function App() {
   const me = useMe();
+  const { data, loading } = useSite();
+  const [redeploy, { loading: deploying }] = useMutation(REDEPLOY_MUTATION);
+
+  const site = data?.site;
+  const app = useAppBridge();
 
   const {
     value: deployNowModalOpen,
@@ -44,8 +80,33 @@ function App() {
     setFalse: handleCloseDeployNowModal,
   } = useToggle(false);
 
-  if (!me) {
-    return <SkeletonPage title="Crane" />;
+  const handleDeploy = useCallback(() => {
+    handleCloseDeployNowModal();
+    redeploy()
+      .then(() => {
+        const toast = Toast.create(app, {
+          message: 'Deployment created',
+          duration: 2000,
+        });
+        toast.dispatch(Toast.Action.SHOW);
+      })
+      .catch(e => {
+        console.warn(e);
+        const toast = Toast.create(app, {
+          message: 'Failed to create deployment',
+          isError: true,
+          duration: 2000,
+        });
+        toast.dispatch(Toast.Action.SHOW);
+      });
+  }, [app, handleCloseDeployNowModal, redeploy]);
+
+  if (!me || !site) {
+    return (
+      <SkeletonPage title="Crane">
+        <SkeletonBodyText lines={4} />
+      </SkeletonPage>
+    );
   }
 
   return (
@@ -54,25 +115,50 @@ function App() {
       primaryAction={{
         content: 'Deploy now',
         onAction: handleOpenDeployNowModal,
+        loading: deploying,
       }}
       secondaryActions={[
         {
           external: true,
-          url: 'https://google.ca',
+          url: site.url,
           content: 'View your store',
           icon: ViewMinor,
         },
       ]}
     >
       <TitleBar title="" />
+      {deploying && <Loading />}
       <Layout>
         <Layout.Section>
           <MediaCard
-            title="Current deployment"
-            description="This is what your customers are seeing"
+            title="Current live website"
+            description={
+              (
+                <>
+                  <span>
+                    This is the website your customers are currently seeing
+                  </span>
+                  <br />
+                  <br />
+                  <span>
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <Link external url={site.url}>
+                      {site.url}
+                    </Link>
+                  </span>
+                  <br />
+                  <br />
+                  <span>
+                    {' '}
+                    If it has gotten out of date, you can redeploy now, The
+                    process may take a few moments to complete.
+                  </span>
+                </>
+              ) as any
+            }
             primaryAction={{
               external: true,
-              url: 'https://google.ca',
+              url: site.url,
               content: 'Preview',
             }}
             popoverActions={[{ content: 'Redeploy', onAction: console.log }]}
@@ -82,14 +168,60 @@ function App() {
               width="100%"
               height="100%"
               style={{ objectFit: 'cover', objectPosition: 'center' }}
-              src="https://vercel.com/api/screenshot?deploymentId=dpl_62Kga4Hgwk4TfD6V5cgHPwg9qfES&teamId=team_CdRRPnMWN93vc9SmTZihJFJV"
-            />
-            <iframe
-              src="https://vercel.com/api/screenshot?deploymentId=dpl_62Kga4Hgwk4TfD6V5cgHPwg9qfES&teamId=team_CdRRPnMWN93vc9SmTZihJFJV"
-              title="test"
+              src={site?.thumbnail ? site.thumbnail : undefined}
             />
           </MediaCard>
         </Layout.Section>
+        <Layout.AnnotatedSection
+          title="Deployment history"
+          description={
+            <>
+              <p>Automatically updated every 3 seconds</p>
+              <br />
+              <p>Your three latest production builds will show here</p>
+              <br />
+              <p>
+                To see more builds see the{' '}
+                {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                <Link url="/builds">builds tab</Link>
+              </p>
+            </>
+          }
+        >
+          {site.deployments.map(d => {
+            return (
+              <Card
+                key={d.id}
+                sectioned
+                subdued
+                title={`Build started ${formatDistanceToNow(
+                  d.createdAt * 1000,
+                )} ago`}
+              >
+                {d.building && (
+                  <p>Still building, will automatically deploy once complete</p>
+                )}
+                {d.error && (
+                  <TextStyle variation="negative">
+                    This build has failed due to an error
+                  </TextStyle>
+                )}
+                {!d.error && !d.building && (
+                  <TextStyle>
+                    This build completed and has been deployed
+                    <br />
+                    <br />
+                    It can be{' '}
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <Link url={d.url} external>
+                      previewed here
+                    </Link>
+                  </TextStyle>
+                )}
+              </Card>
+            );
+          })}
+        </Layout.AnnotatedSection>
       </Layout>
       <Modal
         open={deployNowModalOpen}
@@ -98,8 +230,16 @@ function App() {
         message="This will redeploy your website. It may take a few minutes depending on your configuration"
         primaryAction={{
           content: 'Deploy',
-          onAction: console.log,
+          onAction: handleDeploy,
+          disabled: deploying,
         }}
+        secondaryActions={[
+          {
+            content: 'Cancel',
+            onAction: handleCloseDeployNowModal,
+            disabled: deploying,
+          },
+        ]}
       />
     </Page>
   );

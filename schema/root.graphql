@@ -1,3 +1,20 @@
+type Deployment {
+  id: ID!
+  createdAt: Int!
+  building: Boolean!
+  error: Boolean!
+  url: String!
+}
+
+type Site {
+  id: ID!
+  name: String!
+  url: String!
+  building: Boolean!
+  thumbnail: String
+  deployments: [Deployment!]!
+}
+
 type Vercel {
   id: ID!
   email: String!
@@ -18,6 +35,8 @@ type User {
 
 type Query {
   me: User!
+
+  site: Site
 }
 
 type Mutation {
@@ -30,4 +49,6 @@ type Mutation {
   Deploy starter theme to vercel
   """
   vercelDeployStarter(name: String!): String
+
+  vercelDeploy: String
 }

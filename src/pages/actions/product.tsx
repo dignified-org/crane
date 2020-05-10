@@ -13,6 +13,7 @@ import {
 } from '@shopify/polaris';
 import { ResourceType } from '@shopify/app-bridge/actions/Navigation/Redirect';
 import { useAppBridge } from '../_app';
+import { useSite } from '../../graph/useUser';
 
 function ProductAction() {
   return <DefaultError statusCode={404} />;
@@ -41,14 +42,15 @@ function AppProduct() {
       id: `gid://shopify/Product/${id}`,
     },
   });
+  const [site, loading] = useSite();
 
   const product = data?.product;
 
   const appBridge = useAppBridge();
   useEffect(() => {
-    if (product?.published) {
+    if (product?.published && site?.url) {
       Redirect.create(appBridge).dispatch(Redirect.Action.REMOTE, {
-        url: `https://quinndev.satel.ca/product/${product.handle}`,
+        url: `${site.url}/product/${product.handle}`,
         newContext: true,
       });
 
@@ -61,9 +63,9 @@ function AppProduct() {
         });
       }, 5);
     }
-  }, [appBridge, product]);
+  }, [appBridge, product, site]);
 
-  if (!product || product?.published) {
+  if (!product || product?.published || !site || loading) {
     return (
       <div
         style={{
