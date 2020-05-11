@@ -67,7 +67,7 @@ export type Vercel = {
    __typename?: 'Vercel';
   id: Scalars['ID'];
   email: Scalars['String'];
-  name: Scalars['String'];
+  name?: Maybe<Scalars['String']>;
   username: Scalars['String'];
   date: Scalars['String'];
   avatar: Scalars['String'];
@@ -215,7 +215,7 @@ export type UserResolvers<ContextType = Context, ParentType extends ResolversPar
 export type VercelResolvers<ContextType = Context, ParentType extends ResolversParentTypes['Vercel'] = ResolversParentTypes['Vercel']> = {
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>,
   email?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
-  name?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
+  name?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>,
   username?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   date?: Resolver<ResolversTypes['String'], ParentType, ContextType>,
   avatar?: Resolver<ResolversTypes['String'], ParentType, ContextType>,

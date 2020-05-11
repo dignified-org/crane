@@ -64,7 +64,7 @@ export type Vercel = {
    __typename?: 'Vercel';
   id: Scalars['ID'];
   email: Scalars['String'];
-  name: Scalars['String'];
+  name?: Maybe<Scalars['String']>;
   username: Scalars['String'];
   date: Scalars['String'];
   avatar: Scalars['String'];
