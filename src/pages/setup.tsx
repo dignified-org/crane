@@ -10,6 +10,8 @@ import {
   AccountConnection,
   Link,
   FormLayout,
+  List,
+  TextStyle,
 } from '@shopify/polaris';
 import { Modal, Loading } from '@shopify/app-bridge-react';
 import { useRouter } from 'next/dist/client/router';
@@ -213,10 +215,18 @@ function AppSetup() {
         <Layout>
           <Layout.Section>
             <Card title={`Welcome to Crane, ${me.firstName}!`} sectioned>
-              <p />
+              <p>
+                We need a couple of things from you to get your website
+                {/* eslint-disable-next-line react/no-unescaped-entities */}
+                deployed. Don't worry, all our hosting platforms have a free
+                forever plan.
+              </p>
             </Card>
           </Layout.Section>
-          <Layout.AnnotatedSection title="Step 1">
+          <Layout.AnnotatedSection
+            title="Step 1"
+            description="Vercel are the ones who host your website. Crane needs access so it can automatically trigger new builds and perform other actions on your behalf"
+          >
             <AccountConnection
               avatarUrl={me?.vercel?.avatar}
               title="Vercel (previously Zeit)"
@@ -262,7 +272,10 @@ function AppSetup() {
               }
             />
           </Layout.AnnotatedSection>
-          <Layout.AnnotatedSection title="Step 2">
+          <Layout.AnnotatedSection
+            title="Step 2"
+            description="Give your project a name"
+          >
             <Card sectioned>
               <FormLayout>
                 <TextField
@@ -275,8 +288,59 @@ function AppSetup() {
               </FormLayout>
             </Card>
           </Layout.AnnotatedSection>
-          <Layout.AnnotatedSection title="Summary">
-            <Card sectioned>todo</Card>
+          <Layout.AnnotatedSection
+            title="Summary"
+            description={
+              <>
+                <p>
+                  Here are all of the steps Crane is about to take on your
+                  behalf.
+                </p>
+                <br />
+                <p>
+                  If you are not comfortable with that, you can exit setup and
+                  configure Crane manually
+                </p>
+              </>
+            }
+          >
+            <Card sectioned title="Setup will">
+              <List type="number">
+                <List.Item>
+                  <TextStyle variation="strong">
+                    Create a private repository called{' '}
+                    {formik.values.name || shop().replace('.myshopify.com', '')}{' '}
+                    on your Github account
+                  </TextStyle>
+                </List.Item>
+                <List.Item>
+                  <TextStyle variation="strong">
+                    Populate the repo with our{' '}
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <Link
+                      url="https://github.com/dignified-org/gatsby-starter-crane"
+                      external
+                    >
+                      Shopify starter
+                    </Link>
+                  </TextStyle>
+                </List.Item>
+                <List.Item>
+                  <TextStyle variation="strong">
+                    Create a Vercel project called{' '}
+                    {formik.values.name || shop().replace('.myshopify.com', '')}{' '}
+                    and link it the repo
+                  </TextStyle>
+                </List.Item>
+                <List.Item>
+                  <TextStyle variation="strong">
+                    Create the first deployment. Please note the first
+                    deployment may take longer, depending on the number of
+                    product you have.
+                  </TextStyle>
+                </List.Item>
+              </List>
+            </Card>
           </Layout.AnnotatedSection>
           <Layout.Section>
             <PageActions
